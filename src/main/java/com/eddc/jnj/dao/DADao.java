@@ -17,10 +17,13 @@ public interface DADao {
 
     List<Map<String,Object>> getHeNanOrderDataMessage(Map params);
 
-    String getHeNanOrderDataMessage_3(Map params);
-
     //更新数据到业务表
     List<Map<String,Object>> updateHeNanToTableDetail(Map params);
+    //执行sql获得数据 -正常
+    List<Map<String,Object>> getDataHeNan(String sql);
+
+
+
 
 
 }

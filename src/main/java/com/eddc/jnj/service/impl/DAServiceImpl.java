@@ -21,6 +21,9 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
 import javax.mail.internet.MimeMessage;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -44,6 +47,11 @@ public class DAServiceImpl implements DAService {
     @Autowired
     private JavaMailSender jms;
 
+    private static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    static String datestr = df.format(new Date());
+    static String dateyear = StringUtils.substringBefore(datestr, "-");
+    static String datemon = StringUtils.substringBetween(datestr, "-", "-");
+    static String dateday = StringUtils.substringAfterLast(datestr, "-");
 
     /*获取邮件正文及附件数据*/
     public List<Map<String, Object>> getSiChuanOrderData(Map params) {
@@ -233,32 +241,25 @@ public class DAServiceImpl implements DAService {
 
     //-----------------河南---------------
 
-
-    @Override
-    public void updateHeNanToTable(Map params) {
-        daDao.getHeNanOrderDataMessage(params);
-    }
-
     @Override
     public List<Map<String, Object>> getHeNanOrderData(Map params) {
         return daDao.getHeNanOrderDataMessage(params);
     }
 
-
     @Override
-    public void exportHeNanOrderData(Map params) {
+    public void updateExportHeNanOrderData(Map params) {
 
         List<Map<String, Object>> detail = this.getHeNanOrderData(params);
-        logger.info("---detail 有 :" + detail.size() + " 行");
-        SXSSFExcelTitle[][] detail_titles = this.getTitles(detail);
-        List<String> detail_columnFields = this.getColumnFields(detail);
+        logger.info("--- 执行存储过程，返回结果集有 :" + detail.size() + " 行");
 
-        if (detail.size() < 0) {
+        if (detail.size() == 0) {
             logger.info("河南省BU：" + params.get("BU").toString() + "无数据产出,日期：" + params.get("date").toString() + "|" + params.get("num").toString());
             return;
         } else {
-            logger.info("河南省BU：" + params.get("BU").toString() + ",日期：" + params.get("date").toString() + "|" + params.get("num").toString() + " 开始导出数据");
+            SXSSFExcelTitle[][] detail_titles = this.getTitles(detail);
+            List<String> detail_columnFields = this.getColumnFields(detail);
 
+            logger.info("河南省BU：" + params.get("BU").toString() + ",日期：" + params.get("date").toString() + "|" + params.get("num").toString() + " 开始导出数据");
             /*构建导出文件路径*/
             Calendar now = Calendar.getInstance();
             now.setTime(new Date());
@@ -269,7 +270,7 @@ public class DAServiceImpl implements DAService {
             now.add(Calendar.DAY_OF_MONTH, 7);
             String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
 
-            String outPath = resource.getHeNan_basicPath() + "\\" + "河南省平台订单数据-" + params.get("BU").toString() + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
+            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + "河南省平台订单数据-" + params.get("BU").toString() + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
                 Export.buildSXSSFExportExcelWorkBook().createSheet("详情页").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(detail)
@@ -281,8 +282,164 @@ public class DAServiceImpl implements DAService {
         }
     }
 
+    //执行sql,正常数据
+    @Override
+    public void getDataHeNan(Map params) {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
+                " datetime='" + params.get("datetime") + "'" +
+                " and bu='" + params.get("bu") + "'" +
+                " and 是否新增='" + params.get("isNew") + "'" +
+                " and 账号='" + params.get("user") + "'";
+        logger.info("sql:   " + sql);
+        List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
+        logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+        if (mapList.size() > 0) {
+            SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
+            List<String> detail_columnFields = this.getColumnFields(mapList);
+
+            logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
+            /*构建导出文件路径*/
+            Calendar now = Calendar.getInstance();
+            try {
+                now.setTime(format.parse((String) params.get("datetime")));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            String now_date_str = DateFormatUtils.format(now, "yyyy-MM-dd");
+//            now.add(Calendar.DAY_OF_MONTH, -7);
+            now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
+            String last_week_first_day = DateFormatUtils.format(now, "yyyy-MM-dd");
+            now.add(Calendar.DAY_OF_MONTH, 7);
+            String last_week_last_day = DateFormatUtils.format(now, "yyyy-MM-dd");
+
+            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + dateday + "\\"
+                    + params.get("user") + " 中标产品配送情况汇总详情【" + last_week_first_day + "至" + last_week_last_day + "】.xlsx";
+            logger.info("文件输出路径:" + outPath);
+            try {
+                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
+                        .export(outPath);
+                logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + "导出数据完毕");
+            } catch (Exception e) {
+                logger.error("文件生成异常：" + e.getMessage());
+            }
+        } else {
+            logger.error("执行sql，获得数据 0 个");
+        }
+    }
+
+    @Override
+    public void getDataHeNanabnormal(Map params) {
+        String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
+                " datetime='" + params.get("datetime") + "'" +
+                " and bu='" + params.get("bu") + "'" +
+                " and 是否新增='" + params.get("isNew") + "'" +
+                " and " + params.get("dataType");
+        logger.info("sql:   " + sql);
+        List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
+        logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+        if (mapList.size() > 0) {
+            SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
+            List<String> detail_columnFields = this.getColumnFields(mapList);
+
+            logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
+            /*构建导出文件路径*/
+
+            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + dateday + "\\"
+                    + params.get("bu") + " 河南异常订单跟进" + params.get("datetime") + ".xlsx";
+            logger.info("文件输出路径:" + outPath);
+            try {
+                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
+                        .export(outPath);
+                logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + "导出数据完毕");
+            } catch (Exception e) {
+                logger.error("文件生成异常：" + e.getMessage());
+            }
+        } else {
+            logger.error("执行sql，获得数据 0 个");
+        }
+    }
+
     @Override
     public void sendHeNanOrderData(Map params) {
+        /*获取所有的邮件接收者*/
+        List<Map<String, Object>> users = daDao.selectUsersByProviceByBu(params);
+        String[] tos = new String[users.size()];
+        for (int i = 0; i < users.size(); i++) {
+            tos[i] = users.get(i).get("mail_address").toString();
+            logger.info("发送给：" + tos[i].toString());
+        }
+
+        /*获取所有要发送的数据*/
+        params.put("num2", "4");
+        List<Map<String, Object>> text = this.getHeNanOrderData(params);//获取邮件正文
+        /*获取正文统计*/
+        params.put("num2", "2");
+        List<Map<String, Object>> statistics = this.getHeNanOrderData(params);
+
+        /*构建文件路径*/
+        Calendar now = Calendar.getInstance();
+        now.setTime(new Date());
+        String subject_date = DateFormatUtils.format(now, "yyyy.MM.dd");//邮件主题日期
+        String now_date_str = DateFormatUtils.format(now, "yyyy.MM.dd");
+//        now.add(Calendar.DAY_OF_MONTH, -7);
+        now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
+        String last_week_first_day = DateFormatUtils.format(now, "yyyy.MM.dd");
+        now.add(Calendar.DAY_OF_MONTH, 7);
+        String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
+        /*附件文件*/
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + dateday;
+        File fileDir = new File(outPath);
+        File[] files = new File[5];
+        if (fileDir.isDirectory()) {
+            files = fileDir.listFiles();
+        } else {
+            logger.error("路径错误");
+        }
+        /*附件名称*/
+
+        /*邮件主题*/
+        String subject = params.get("BU").toString() + "-河南省平台订单数据推送-Report " + "," + subject_date;
+        /*邮件正文*/
+        String mail_text = "";
+        for (int i = 0; i < text.size(); i++) {
+            Map<String, Object> temp = text.get(i);
+            for (String key : temp.keySet()) {
+                mail_text = temp.get(key).toString();
+            }
+        }
+        logger.info("mail_text:" + mail_text);
+
+
+        System.setProperty("mail.mime.splitlongparameters", "false");
+        MimeMessage message = jms.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("eddc@earlydata.com");
+            String to = "keshi.wang@earlydata.com";
+            helper.setTo(to);
+            helper.setSubject(subject);
+
+            for (File filefile : files) {
+                FileSystemResource file = new FileSystemResource(filefile);
+                helper.addAttachment(file.getFilename(), file);//添加附件
+            }
+
+            Map<String, Object> datas = new HashMap();
+            datas.put("mail_text", mail_text);
+            datas.put("statistics", statistics);
+//            datas.put("mail_text_exception", mail_text_exception);
+//            datas.put("statistics_exception", statistics_exception);
+
+            Template template = configuration.getTemplate("heNanOrder.ftl");
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
+            helper.setText(html, true);
+
+            jms.send(message);
+
+        } catch (Exception e) {
+            logger.info("发送邮件异常：" + e.getMessage());
+        }
 
     }
 }

@@ -13,12 +13,14 @@ public interface DAService {
     void sendSiChuanOrderData(Map params);
 
     List<Map<String,Object>> getHeNanOrderData(Map params);
-    void exportHeNanOrderData(Map params);
-    void sendHeNanOrderData(Map params);
-
-    //-----------河南----------
     //1.跟新数据到业务表
-    void updateHeNanToTable(Map params);
+    void updateExportHeNanOrderData(Map params);
+    //2.1 sql 获得数据-正常数据 导出附件Excel
+    void getDataHeNan(Map params);
+    //2.2 sql 获得数据-正常数据 导出附件Excel
+    void getDataHeNanabnormal(Map params);
+    //3 发送邮件
+    void sendHeNanOrderData(Map params);
 
 
 
