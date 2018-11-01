@@ -270,7 +270,8 @@ public class DAServiceImpl implements DAService {
             now.add(Calendar.DAY_OF_MONTH, 7);
             String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
 
-            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + "河南省平台订单数据-" + params.get("BU").toString() + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
+            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" +
+                    "河南省平台订单数据存储过程结果-" + params.get("date").toString() + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
                 Export.buildSXSSFExportExcelWorkBook().createSheet("详情页").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(detail)
@@ -416,7 +417,10 @@ public class DAServiceImpl implements DAService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom("eddc@earlydata.com");
             String to = "keshi.wang@earlydata.com";
-            helper.setTo(to);
+            //测试
+//            helper.setTo(to);
+            //正式
+            helper.setTo(tos);
             helper.setSubject(subject);
 
             for (File filefile : files) {

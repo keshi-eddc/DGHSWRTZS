@@ -56,7 +56,7 @@ public class DATest_henan {
         //文件生成日期， 输入要对比的历史数据时长，目前客户要求对比上一周，那输入-7即可，但如果周三碰到节假日没有推送，数据要累积到下周三发，那这里输入-14
         params.put("num", "-7");
         //sql参数
-        params.put("datetime", "2018-10-24");
+        params.put("datetime", "2018-10-17");
         params.put("bu", "bw");
         params.put("isNew", "Y");
 //        params.put("user", "hs1589");
@@ -92,7 +92,7 @@ public class DATest_henan {
         Map<String, Object> params = new HashMap<String, Object>(3);
         params.put("province_name", "河南省");
         params.put("BU", "BW");
-        params.put("date", "2018-10-24");
+        params.put("date", "2018-10-17");
         params.put("num", "-7");
 //        params.put("num2", "2");
         daService.sendHeNanOrderData(params);
