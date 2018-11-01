@@ -381,7 +381,8 @@ public class DAServiceImpl implements DAService {
         /*构建文件路径*/
         Calendar now = Calendar.getInstance();
         now.setTime(new Date());
-        String subject_date = DateFormatUtils.format(now, "yyyy.MM.dd");//邮件主题日期
+//        String subject_date = DateFormatUtils.format(now, "yyyy.MM.dd");//邮件主题日期
+        String subject_date = String.valueOf(now.get(Calendar.YEAR)) + "年" + String.valueOf(now.get(Calendar.MONTH) + 1) + "月" + String.valueOf(now.get(Calendar.DATE)) + "日";
         String now_date_str = DateFormatUtils.format(now, "yyyy.MM.dd");
 //        now.add(Calendar.DAY_OF_MONTH, -7);
         now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
@@ -400,7 +401,7 @@ public class DAServiceImpl implements DAService {
         /*附件名称*/
 
         /*邮件主题*/
-        String subject = params.get("BU").toString() + "-河南省平台订单数据推送-Report " + " " + subject_date;
+        String subject = "河南省平台订单数据推送-" + params.get("BU").toString() + " " + subject_date;
         /*邮件正文*/
         String mail_text = "";
         for (int i = 0; i < text.size(); i++) {
