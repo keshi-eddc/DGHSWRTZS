@@ -210,6 +210,42 @@ public class DAServiceImpl implements DAService {
     public SXSSFExcelTitle[][] getTitles(List<Map<String, Object>> datas) {
         List<String> columnFields = new ArrayList<>();
         for (String key : datas.get(0).keySet()) {
+            if (key.equals("link")) {
+                key = "操作link";
+            } else if (key.equals("product_code")) {
+                key = "产品代码";
+            } else if (key.equals("purchaseListName")) {
+                key = "采购单名称";
+            } else if (key.equals("logistics")) {
+                key = "配送企业";
+            } else if (key.equals("hospital")) {
+                key = "采购医院";
+            } else if (key.equals("price_limit")) {
+                key = "采购限价";
+            } else if (key.equals("purchasePrice")) {
+                key = "采购价";
+            } else if (key.equals("purchaseCnt")) {
+                key = "采购量";
+            } else if (key.equals("deliveryCnt")) {
+                key = "配送量";
+            } else if (key.equals("inboundCnt")) {
+                key = "入库总量";
+            } else if (key.equals("returnedCnt")) {
+                key = "退货量";
+            } else if (key.equals("begin_time")) {
+                key = "开始时间";
+            } else if (key.equals("end_time")) {
+                key = "结束时间";
+            } else if (key.equals("delivery_time")) {
+                key = "企业配送时间";
+            } else if (key.equals("reached_time")) {
+                key = "医院入库时间";
+            } else if (key.equals("insert_time")) {
+                key = "数据更新时间";
+            } else if (key.equals("datetime")) {
+                key = "更新日期";
+            }
+//            System.out.println("表头：" + key);
             columnFields.add(key);
         }
         //构建用于描述标题的二维数组,获取数据代码略
@@ -298,6 +334,7 @@ public class DAServiceImpl implements DAService {
         if (mapList.size() > 0) {
             SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
             List<String> detail_columnFields = this.getColumnFields(mapList);
+            //修改表头
 
             logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
             /*构建导出文件路径*/
