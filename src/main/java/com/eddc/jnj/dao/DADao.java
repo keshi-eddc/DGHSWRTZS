@@ -21,8 +21,8 @@ public interface DADao {
     List<Map<String,Object>> updateHeNanToTableDetail(Map params);
     //执行sql获得数据 -正常
     List<Map<String,Object>> getDataHeNan(String sql);
-
-
+    //获得sycm_account 河南的用户
+    List<Map<String,Object>> getaHeNanUsers(String sql);
 
 
 

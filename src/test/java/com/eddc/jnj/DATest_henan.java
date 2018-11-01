@@ -1,20 +1,19 @@
 package com.eddc.jnj;
 
+import com.eddc.jnj.dao.DADao;
 import com.eddc.jnj.service.DAService;
 import freemarker.template.Configuration;
-import freemarker.template.Template;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(SpringRunner.class)
@@ -30,6 +29,11 @@ public class DATest_henan {
     @Autowired
     private JavaMailSender jms;
 
+    @Autowired
+    private DADao daDao;
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     //1.执行存储过程
     //2.mybits 执行sql 拿到返回结果
     //3.写到文件
@@ -39,23 +43,42 @@ public class DATest_henan {
     public void updateHeNan() {
         Map<String, Object> params = new HashMap<String, Object>(3);
         params.put("BU", "BW");
-        params.put("date", "2018-10-24");
+        params.put("date", "2018-10-17");
         params.put("num", "-7");
         params.put("num2", "1");
         daService.updateExportHeNanOrderData(params);
     }
+
     //2.mybits 执行sql 拿到返回结果
     @Test
-    public void getHeNanNormalData(){
+    public void getHeNanNormalData() {
         Map<String, Object> params = new HashMap<String, Object>(6);
+        //文件生成日期， 输入要对比的历史数据时长，目前客户要求对比上一周，那输入-7即可，但如果周三碰到节假日没有推送，数据要累积到下周三发，那这里输入-14
+        params.put("num", "-7");
+        //sql参数
         params.put("datetime", "2018-10-24");
         params.put("bu", "bw");
         params.put("isNew", "Y");
-        params.put("user", "hs1589");
-        daService.getDataHeNan(params);
+//        params.put("user", "hs1589");
+        //获得所有的用户
+        String sql = "SELECT * FROM [dbo].[sycm_account] where shop_name like '%河南%'";
+        logger.info("- 查询所有用户sql :" + sql);
+        List<Map<String, Object>> userListMap = daDao.getaHeNanUsers(sql);
+        if (userListMap.size() > 0) {
+            logger.info("- 查询到：" + userListMap.size() + " 个用户");
+            for (Map<String, Object> usermap : userListMap) {
+                String userName = usermap.get("name").toString();
+                logger.info("user: " + userName);
+                params.put("user", userName);
+                daService.getDataHeNan(params);
+            }
+        } else {
+            logger.error("没有查询到用户！！");
+        }
     }
+
     @Test
-    public void getHeNanAbnormalData(){
+    public void getHeNanAbnormalData() {
         Map<String, Object> params = new HashMap<String, Object>(6);
         params.put("datetime", "2018-10-17");
         params.put("bu", "bw");
@@ -63,6 +86,7 @@ public class DATest_henan {
         params.put("dataType", "GAP<0");
         daService.getDataHeNanabnormal(params);
     }
+
     @Test
     public void sendHeNanOrderData() {
         Map<String, Object> params = new HashMap<String, Object>(3);
@@ -74,43 +98,5 @@ public class DATest_henan {
         daService.sendHeNanOrderData(params);
     }
 
-        @Test
-    public void sendSiChuanOrderData() {
-        Map<String, Object> params = new HashMap<String, Object>(3);
-        params.put("province_name", "四川省");
-        params.put("BU", "BW");
-        params.put("date_from", "2018-10-22");
-        params.put("date_end", "2018-10-29");
-        params.put("period", "09");
-        daService.sendSiChuanOrderData(params);
-    }
 
-    @Test
-    public void sendEmailTest() throws MessagingException {
-        MimeMessage message = jms.createMimeMessage();
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("eddc@earlydata.com");
-            helper.setTo("keshi.wang@earlydata.com");
-            helper.setSubject("使用模板");
-
-            Map<String, Object> model = new HashMap();
-            model.put("UserName", "yao");
-
-            try {
-                Template template = configuration.getTemplate("siChuanOrder.ftl");
-                String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
-
-                helper.setText(html, true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
-
-        jms.send(message);
-    }
 }

@@ -54,6 +54,9 @@ userId,userName,password,phone
     <select id="getDataHeNan" resultType="java.util.LinkedHashMap" parameterType="java.lang.String">
 		${value}
   </select>
-
+    <!-- 目的：sql获得河南的所有的用户 -->
+    <select id="getaHeNanUsers" resultType="java.util.LinkedHashMap" parameterType="java.lang.String">
+		${value}
+  </select>
 
 </mapper>

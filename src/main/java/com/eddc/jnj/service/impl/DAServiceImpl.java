@@ -307,13 +307,13 @@ public class DAServiceImpl implements DAService {
                 e.printStackTrace();
             }
             String now_date_str = DateFormatUtils.format(now, "yyyy-MM-dd");
-//            now.add(Calendar.DAY_OF_MONTH, -7);
+            now.add(Calendar.DAY_OF_MONTH, Integer.valueOf(params.get("num").toString()));
             now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
             String last_week_first_day = DateFormatUtils.format(now, "yyyy-MM-dd");
-            now.add(Calendar.DAY_OF_MONTH, 7);
+            now.add(Calendar.DAY_OF_MONTH, -Integer.valueOf(params.get("num").toString()));
             String last_week_last_day = DateFormatUtils.format(now, "yyyy-MM-dd");
 
-            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + dateday + "\\"
+            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
                     + params.get("user") + " 中标产品配送情况汇总详情【" + last_week_first_day + "至" + last_week_last_day + "】.xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
@@ -345,7 +345,7 @@ public class DAServiceImpl implements DAService {
             logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
             /*构建导出文件路径*/
 
-            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + dateday + "\\"
+            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
                     + params.get("bu") + " 河南异常订单跟进" + params.get("datetime") + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
@@ -388,9 +388,9 @@ public class DAServiceImpl implements DAService {
         now.add(Calendar.DAY_OF_MONTH, 7);
         String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
         /*附件文件*/
-        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + dateday;
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\";
         File fileDir = new File(outPath);
-        File[] files = new File[5];
+        File[] files = new File[100];
         if (fileDir.isDirectory()) {
             files = fileDir.listFiles();
         } else {
@@ -399,7 +399,7 @@ public class DAServiceImpl implements DAService {
         /*附件名称*/
 
         /*邮件主题*/
-        String subject = params.get("BU").toString() + "-河南省平台订单数据推送-Report " + "," + subject_date;
+        String subject = params.get("BU").toString() + "-河南省平台订单数据推送-Report " + " " + subject_date;
         /*邮件正文*/
         String mail_text = "";
         for (int i = 0; i < text.size(); i++) {
@@ -409,7 +409,6 @@ public class DAServiceImpl implements DAService {
             }
         }
         logger.info("mail_text:" + mail_text);
-
 
         System.setProperty("mail.mime.splitlongparameters", "false");
         MimeMessage message = jms.createMimeMessage();
@@ -421,15 +420,25 @@ public class DAServiceImpl implements DAService {
             helper.setSubject(subject);
 
             for (File filefile : files) {
-                FileSystemResource file = new FileSystemResource(filefile);
-                helper.addAttachment(file.getFilename(), file);//添加附件
+                String fileName = filefile.getName();
+                //正常数据的文件
+                String matchedNormalFileName = "至" + params.get("date").toString() + "】";
+                //异常数据的文件
+                String matchedAbnormalFileName = "订单跟进" + params.get("date").toString();
+                if (fileName.contains(matchedNormalFileName) || fileName.contains(matchedAbnormalFileName)) {
+                    if (!fileName.contains("副本")) {
+                        FileSystemResource file = new FileSystemResource(filefile);
+                        helper.addAttachment(file.getFilename(), file);//添加附件
+                        logger.info("- 添加附件：" + fileName);
+                    }
+                } else {
+//                    logger.error("没有发现 文件 ：**至" + params.get("date"));
+                }
             }
 
             Map<String, Object> datas = new HashMap();
             datas.put("mail_text", mail_text);
             datas.put("statistics", statistics);
-//            datas.put("mail_text_exception", mail_text_exception);
-//            datas.put("statistics_exception", statistics_exception);
 
             Template template = configuration.getTemplate("heNanOrder.ftl");
             String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
