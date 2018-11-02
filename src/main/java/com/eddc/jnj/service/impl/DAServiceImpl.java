@@ -306,7 +306,7 @@ public class DAServiceImpl implements DAService {
             now.add(Calendar.DAY_OF_MONTH, 7);
             String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
 
-            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" +
+            String outPath = resource.getHeNan_basicPath() + "\\" + "存储过程结果" + "\\" + dateyear + "\\" + datemon + "\\" +
                     "河南省平台订单数据存储过程结果-" + params.get("date").toString() + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
@@ -336,7 +336,7 @@ public class DAServiceImpl implements DAService {
             List<String> detail_columnFields = this.getColumnFields(mapList);
             //修改表头
 
-            logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
+            logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
             /*构建导出文件路径*/
             Calendar now = Calendar.getInstance();
             try {
@@ -380,7 +380,7 @@ public class DAServiceImpl implements DAService {
             SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
             List<String> detail_columnFields = this.getColumnFields(mapList);
 
-            logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
+            logger.info(" 河南省 异常数据 " + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
             /*构建导出文件路径*/
 
             String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
@@ -409,9 +409,10 @@ public class DAServiceImpl implements DAService {
         }
 
         /*获取所有要发送的数据*/
+        //获取邮件正文
         params.put("num2", "4");
-        List<Map<String, Object>> text = this.getHeNanOrderData(params);//获取邮件正文
-        /*获取正文统计*/
+        List<Map<String, Object>> text = this.getHeNanOrderData(params);
+        //获取正文统计表
         params.put("num2", "2");
         List<Map<String, Object>> statistics = this.getHeNanOrderData(params);
 
