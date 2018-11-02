@@ -36,11 +36,13 @@
 <html>
     <body>
         <#setting number_format="#">
-        <div class="text">
-            Dear All，
-        </div>
-        <div class="text">${mail_text}</div>
-        <div style="margin-top: 15px">
+    <div class="text">
+    <div class="text">Dear All，</div>
+    <div class="text">请查收来自GA OP团队河南省平台订单数据推送。</div>
+    <div class="text">${mail_text}</div>
+    <div class="text">数据情况</div>
+    </div>
+    <div style="margin-top: 15px">
             <table class="gridtable">
                 <#list statistics as exmap>
                     <#if exmap_index = 0>
@@ -59,7 +61,6 @@
             </table>
         </div>
         <div class="text">
-            <div class="text">B.R</div>
             <div class="text">如有问题，请与GA OP专员谈艳阳联系，联系方式：ytan29@its.jnj.com 电话：13816069636。此邮箱为公共邮箱，请勿直接回复。谢谢！</div>
             <div class="text" style="font-weight: bold; ">JJMC GA Operation Team</div>
         </div>
