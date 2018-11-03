@@ -1,6 +1,7 @@
 package com.eddc.jnj.service.impl;
 
 import com.avalon.holygrail.excel.bean.SXSSFExcelTitle;
+import com.avalon.holygrail.excel.norm.ExcelWorkBookExport;
 import com.avalon.holygrail.util.Export;
 import com.eddc.jnj.config.Export_path_config;
 import com.eddc.jnj.dao.DADao;
@@ -10,6 +11,9 @@ import freemarker.template.Template;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -258,7 +262,6 @@ public class DAServiceImpl implements DAService {
             title[i].setWriteEmpty(true);
         }
         titles[0] = title;
-
       /*  title[0].setField("username");//设置标题所在列对应数据的字段
         title[1].setField("password");
         title[2].setField("mobile");
@@ -339,8 +342,9 @@ public class DAServiceImpl implements DAService {
             SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
             List<String> detail_columnFields = this.getColumnFields(mapList);
             //修改表头
+            //设置表的样式
 
-            logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("date") + " 开始导出数据");
+            logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + " 开始导出数据");
             /*构建导出文件路径*/
             Calendar now = Calendar.getInstance();
             try {
@@ -363,8 +367,26 @@ public class DAServiceImpl implements DAService {
                     + "河南省中标产品配送情况汇总 " + params.get("user") + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
-                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
-                        .export(outPath);
+//                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
+//                        .export(outPath);
+                SXSSFWorkbook wb = new SXSSFWorkbook();
+                CellStyle cellStyle = wb.createCellStyle();
+                Font font = wb.createFont();
+
+                ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
+                ewb.createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+
+                font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
+                cellStyle.setFont(font);
+                Sheet sheet = wb.getSheetAt(0);
+                Row row = sheet.getRow(0);
+                for (Cell cell : row) {
+                    cell.setCellStyle(cellStyle);
+                }
+
+
+                ewb.export(outPath);
+
                 logger.info(" 河南省 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
             } catch (Exception e) {
                 logger.error("文件生成异常：" + e.getMessage());
