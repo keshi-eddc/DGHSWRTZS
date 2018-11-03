@@ -328,8 +328,8 @@ public class DAServiceImpl implements DAService {
     public void getDataHeNan(Map params) {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
-                " datetime='" + params.get("datetime") + "'" +
-                " and bu='" + params.get("bu") + "'" +
+                " datetime='" + params.get("date") + "'" +
+                " and bu='" + params.get("BU") + "'" +
                 " and 是否新增='" + params.get("isNew") + "'" +
                 " and 账号='" + params.get("user") + "'";
         logger.info("sql:   " + sql);
@@ -340,11 +340,11 @@ public class DAServiceImpl implements DAService {
             List<String> detail_columnFields = this.getColumnFields(mapList);
             //修改表头
 
-            logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
+            logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("date") + " 开始导出数据");
             /*构建导出文件路径*/
             Calendar now = Calendar.getInstance();
             try {
-                now.setTime(format.parse((String) params.get("datetime")));
+                now.setTime(format.parse((String) params.get("date")));
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -355,7 +355,7 @@ public class DAServiceImpl implements DAService {
             now.add(Calendar.DAY_OF_MONTH, -Integer.valueOf(params.get("num").toString()));
             String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
 
-            String datestr = params.get("datetime").toString();
+            String datestr = params.get("date").toString();
             String dateyear = StringUtils.substringBefore(datestr, "-");
             String datemon = StringUtils.substringBetween(datestr, "-", "-");
 
@@ -365,7 +365,7 @@ public class DAServiceImpl implements DAService {
             try {
                 Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
                         .export(outPath);
-                logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + "导出数据完毕");
+                logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("date") + "导出数据完毕");
             } catch (Exception e) {
                 logger.error("文件生成异常：" + e.getMessage());
             }
@@ -377,8 +377,8 @@ public class DAServiceImpl implements DAService {
     @Override
     public void getDataHeNanabnormal(Map params) {
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
-                " datetime='" + params.get("datetime") + "'" +
-                " and bu='" + params.get("bu") + "'" +
+                " datetime='" + params.get("date") + "'" +
+                " and bu='" + params.get("BU") + "'" +
                 " and 是否新增='" + params.get("isNew") + "'" +
                 " and " + params.get("dataType");
         logger.info("sql:   " + sql);
@@ -388,26 +388,26 @@ public class DAServiceImpl implements DAService {
             SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
             List<String> detail_columnFields = this.getColumnFields(mapList);
 
-            logger.info(" 河南省 异常数据 " + " " + params.get("bu") + " 日期：" + params.get("datetime") + " 开始导出数据");
+            logger.info(" 河南省 异常数据 " + " " + params.get("BU") + " 日期：" + params.get("date") + " 开始导出数据");
             /*构建导出文件路径*/
             String fileDate = "";
             try {
-                fileDate = df1.format(df.parse(params.get("datetime").toString()));
+                fileDate = df1.format(df.parse(params.get("date").toString()));
             } catch (ParseException e) {
                 e.printStackTrace();
             }
 
-            String datestr = params.get("datetime").toString();
+            String datestr = params.get("date").toString();
             String dateyear = StringUtils.substringBefore(datestr, "-");
             String datemon = StringUtils.substringBetween(datestr, "-", "-");
 
             String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
-                    + "河南省平台异常订单数据-" + params.get("bu").toString() + " " + fileDate + ".xlsx";
+                    + "河南省平台异常订单数据-" + params.get("BU").toString() + " " + fileDate + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
                 Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
                         .export(outPath);
-                logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("datetime") + "导出数据完毕");
+                logger.info(" 河南省 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
             } catch (Exception e) {
                 logger.error("文件生成异常：" + e.getMessage());
             }
