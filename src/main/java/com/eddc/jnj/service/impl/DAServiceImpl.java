@@ -343,6 +343,7 @@ public class DAServiceImpl implements DAService {
             List<String> detail_columnFields = this.getColumnFields(mapList);
             //修改表头
             //设置表的样式
+            //修改列的位置
 
             logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + " 开始导出数据");
             /*构建导出文件路径*/
@@ -369,6 +370,7 @@ public class DAServiceImpl implements DAService {
             try {
 //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
 //                        .export(outPath);
+
                 SXSSFWorkbook wb = new SXSSFWorkbook();
                 CellStyle cellStyle = wb.createCellStyle();
                 Font font = wb.createFont();
@@ -383,7 +385,6 @@ public class DAServiceImpl implements DAService {
                 for (Cell cell : row) {
                     cell.setCellStyle(cellStyle);
                 }
-
 
                 ewb.export(outPath);
 
@@ -427,8 +428,26 @@ public class DAServiceImpl implements DAService {
                     + "河南省平台异常订单数据-" + params.get("BU").toString() + " " + fileDate + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
-                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
-                        .export(outPath);
+//                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
+//                        .export(outPath);
+
+                SXSSFWorkbook wb = new SXSSFWorkbook();
+                CellStyle cellStyle = wb.createCellStyle();
+                Font font = wb.createFont();
+
+                ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
+                ewb.createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+
+                font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
+                cellStyle.setFont(font);
+                Sheet sheet = wb.getSheetAt(0);
+                Row row = sheet.getRow(0);
+                for (Cell cell : row) {
+                    cell.setCellStyle(cellStyle);
+                }
+
+                ewb.export(outPath);
+
                 logger.info(" 河南省 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
             } catch (Exception e) {
                 logger.error("文件生成异常：" + e.getMessage());
@@ -441,11 +460,20 @@ public class DAServiceImpl implements DAService {
     @Override
     public void sendHeNanOrderData(Map params) {
         /*获取所有的邮件接收者*/
+        params.put("sendType", "customer");
         List<Map<String, Object>> users = daDao.selectUsersByProviceByBu(params);
         String[] tos = new String[users.size()];
         for (int i = 0; i < users.size(); i++) {
             tos[i] = users.get(i).get("mail_address").toString();
-            logger.info("发送给：" + tos[i].toString());
+            logger.info("- 发送给：" + tos[i].toString());
+        }
+        /*获取所有的邮件抄送者*/
+        params.put("sendType", "copyto");
+        List<Map<String, Object>> ccusers = daDao.selectUsersByProviceByBu(params);
+        String[] cctos = new String[ccusers.size()];
+        for (int i = 0; i < ccusers.size(); i++) {
+            cctos[i] = ccusers.get(i).get("mail_address").toString();
+            logger.info("- 抄送给：" + cctos[i].toString());
         }
 
         /*获取所有要发送的数据*/
@@ -508,7 +536,12 @@ public class DAServiceImpl implements DAService {
             //测试
 //            helper.setTo(to);
             //正式
+            //发送
             helper.setTo(tos);
+            //抄送
+            if (cctos.length > 0) {
+                helper.setCc(cctos);
+            }
             helper.setSubject(subject);
 
             try {

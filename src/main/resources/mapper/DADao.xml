@@ -29,7 +29,7 @@ userId,userName,password,phone
     <select id="selectUsersByProviceByBu" resultType="java.util.LinkedHashMap" parameterType="hashmap">
      select c.* from Johnson_message_category ct LEFT JOIN Johnson_message mg on ct.id = mg.province_id
                 left join Johnson_message_customer c on mg.customer_id = c.id
-     where ct.category_name = #{BU} and ct.province_name = #{province_name} and c.mail_switch = 'on'and mg.mail_switch = 'on'
+     where ct.category_name = #{BU} and ct.province_name = #{province_name} and c.mail_switch = 'on'and mg.mail_switch = 'on' and c.type = #{sendType}
   </select>
 
     <select id="getSiChuanOrderDataMessage" resultType="java.util.LinkedHashMap" parameterType="hashmap">

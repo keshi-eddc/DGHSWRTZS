@@ -40,7 +40,7 @@
     <div class="text">Dear All，</div>
     <div class="text">请查收来自GA OP团队河南省平台订单数据推送。</div>
     <div class="text">${mail_text}</div>
-    <div class="text">数据情况</div>
+    <div class="text">数据情况：</div>
     </div>
     <div style="margin-top: 15px">
             <table class="gridtable">
