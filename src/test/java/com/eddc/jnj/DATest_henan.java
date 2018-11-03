@@ -34,7 +34,7 @@ public class DATest_henan {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final String DATE = "2018-10-17";
+    private static final String DATE = "2018-10-24";
 
     //1.执行存储过程
     //2.mybits 执行sql 拿到返回结果
