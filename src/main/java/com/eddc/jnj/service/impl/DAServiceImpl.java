@@ -365,7 +365,7 @@ public class DAServiceImpl implements DAService {
             try {
                 Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
                         .export(outPath);
-                logger.info(" 河南省 " + params.get("user") + " " + params.get("bu") + " 日期：" + params.get("date") + "导出数据完毕");
+                logger.info(" 河南省 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
             } catch (Exception e) {
                 logger.error("文件生成异常：" + e.getMessage());
             }
@@ -435,20 +435,26 @@ public class DAServiceImpl implements DAService {
         List<Map<String, Object>> statistics = this.getHeNanOrderData(params);
 
         /*构建文件路径*/
-        Calendar now = Calendar.getInstance();
-        now.setTime(new Date());
-        String subject_date = DateFormatUtils.format(now, "yyyy.MM.dd");//邮件主题日期
+//        Calendar now = Calendar.getInstance();
+//        now.setTime(new Date());
+//        String subject_date = DateFormatUtils.format(now, "yyyy.MM.dd");//邮件主题日期
 //        String subject_date = String.valueOf(now.get(Calendar.YEAR)) + "年" + String.valueOf(now.get(Calendar.MONTH) + 1) + "月" + String.valueOf(now.get(Calendar.DATE)) + "日";
-        String now_date_str = DateFormatUtils.format(now, "yyyy.MM.dd");
+//        String now_date_str = DateFormatUtils.format(now, "yyyy.MM.dd");
 //        now.add(Calendar.DAY_OF_MONTH, -7);
-        now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
-        String last_week_first_day = DateFormatUtils.format(now, "yyyy.MM.dd");
-        now.add(Calendar.DAY_OF_MONTH, 7);
-        String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
+//        now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
+//        String last_week_first_day = DateFormatUtils.format(now, "yyyy.MM.dd");
+//        now.add(Calendar.DAY_OF_MONTH, 7);
+//        String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
         /*附件文件*/
         String datestr = params.get("date").toString();
         String dateyear = StringUtils.substringBefore(datestr, "-");
         String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String fileDate = "";
+        try {
+            fileDate = df1.format(df.parse(datestr));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\";
         File fileDir = new File(outPath);
         File[] files = new File[100];
@@ -460,7 +466,7 @@ public class DAServiceImpl implements DAService {
         /*附件名称*/
 
         /*邮件主题*/
-        String subject = "河南省平台订单数据推送-" + params.get("BU").toString() + "，" + subject_date;
+        String subject = "河南省平台订单数据推送-" + params.get("BU").toString() + "，" + fileDate;
         /*邮件正文*/
         String mail_text = "";
         for (int i = 0; i < text.size(); i++) {
@@ -482,12 +488,7 @@ public class DAServiceImpl implements DAService {
             //正式
             helper.setTo(tos);
             helper.setSubject(subject);
-            String fileDate = "";
-            try {
-                fileDate = df1.format(df.parse(params.get("date").toString()));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+
             try {
                 for (File filefile : files) {
                     String fileName = filefile.getName();
@@ -496,9 +497,8 @@ public class DAServiceImpl implements DAService {
                     //异常数据的文件
                     String matchedAbnormalFileName = "异常";
                     if (!fileName.contains("副本")) {
-                        System.out.println("fileName:" + fileName);
                         if (fileName.contains(matchedNormalFileName)) {
-                            if (fileName.contains(fileDate)) {
+                            if (fileName.contains("_" + fileDate)) {
                                 FileSystemResource file = new FileSystemResource(filefile);
                                 helper.addAttachment(file.getFilename(), file);//添加附件
                                 logger.info("- 添加附件：" + fileName);

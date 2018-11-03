@@ -34,6 +34,8 @@ public class DATest_henan {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private static final String DATE = "2018-10-24";
+
     //1.执行存储过程
     //2.mybits 执行sql 拿到返回结果
     //3.写到文件
@@ -43,7 +45,7 @@ public class DATest_henan {
     public void updateHeNan() {
         Map<String, Object> params = new HashMap<String, Object>(3);
         params.put("BU", "BW");
-        params.put("date", "2018-10-31");
+        params.put("date", DATE);
         params.put("num", "-7");
         params.put("num2", "1");
         daService.updateExportHeNanOrderData(params);
@@ -57,7 +59,7 @@ public class DATest_henan {
         //文件生成日期， 输入要对比的历史数据时长，目前客户要求对比上一周，那输入-7即可，但如果周三碰到节假日没有推送，数据要累积到下周三发，那这里输入-14
         params.put("num", "-7");
         //sql参数
-        params.put("date", "2018-10-31");
+        params.put("date", DATE);
         params.put("BU", "BW");
         params.put("isNew", "是");
 //        params.put("user", "hs1589");
@@ -82,7 +84,7 @@ public class DATest_henan {
     @Test
     public void getHeNanAbnormalData() {
         Map<String, Object> params = new HashMap<String, Object>(6);
-        params.put("date", "2018-10-31");
+        params.put("date", DATE);
         params.put("BU", "BW");
         params.put("isNew", "是");
         params.put("dataType", "GAP<0");
@@ -94,7 +96,7 @@ public class DATest_henan {
         Map<String, Object> params = new HashMap<String, Object>(6);
         params.put("province_name", "河南省");
         params.put("BU", "BW");
-        params.put("date", "2018-10-31");
+        params.put("date", DATE);
         params.put("num", "-7");
 //        params.put("num2", "2");
         daService.sendHeNanOrderData(params);
