@@ -15,8 +15,8 @@
                 border-collapse: collapse;
     }
     table.gridtable th {
-                width: 100px;
-                height: 50px;
+                width: 50px;
+                height: 25px;
                 border-width: 1px;
                 padding: 8px;
                 border-style: solid;
@@ -24,8 +24,8 @@
                 background-color: #dedede;
     }
     table.gridtable td {
-                width: 100px;
-                height: 50px;
+                width: 50px;
+                height: 25px;
                 border-width: 1px;
                 padding: 8px;
                 border-style: solid;

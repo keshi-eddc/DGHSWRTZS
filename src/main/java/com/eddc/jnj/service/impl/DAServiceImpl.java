@@ -371,7 +371,7 @@ public class DAServiceImpl implements DAService {
 //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
 //                        .export(outPath);
 
-                SXSSFWorkbook wb = new SXSSFWorkbook();
+                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size()+1);
                 CellStyle cellStyle = wb.createCellStyle();
                 Font font = wb.createFont();
 
@@ -431,7 +431,7 @@ public class DAServiceImpl implements DAService {
 //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
 //                        .export(outPath);
 
-                SXSSFWorkbook wb = new SXSSFWorkbook();
+                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size()+1);
                 CellStyle cellStyle = wb.createCellStyle();
                 Font font = wb.createFont();
 
@@ -483,6 +483,17 @@ public class DAServiceImpl implements DAService {
         //获取正文统计表
         params.put("num2", "2");
         List<Map<String, Object>> statistics = this.getHeNanOrderData(params);
+        //返回新增异常数据个数
+        params.put("num2", "3");
+        List<Map<String, Object>> newAddAbnormal = this.getHeNanOrderData(params);
+        System.out.println("新增异常数据大小:" + newAddAbnormal.size());
+        for (int i = 0; i < newAddAbnormal.size(); i++) {
+            Map<String, Object> temp = newAddAbnormal.get(i);
+            for (String key : temp.keySet()) {
+                String newAddAbnormalNumStr = temp.get(key).toString();
+                System.out.println("新增异常数据条数:" + key + " " + newAddAbnormalNumStr);
+            }
+        }
 
         /*构建文件路径*/
 //        Calendar now = Calendar.getInstance();
@@ -581,7 +592,7 @@ public class DAServiceImpl implements DAService {
             String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
             helper.setText(html, true);
 
-            jms.send(message);
+//            jms.send(message);
 
         } catch (Exception e) {
             logger.info("发送邮件异常：" + e.getMessage());
