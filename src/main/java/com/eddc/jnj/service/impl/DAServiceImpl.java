@@ -371,7 +371,7 @@ public class DAServiceImpl implements DAService {
 //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
 //                        .export(outPath);
 
-                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size()+1);
+                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size() + 1);
                 CellStyle cellStyle = wb.createCellStyle();
                 Font font = wb.createFont();
 
@@ -431,7 +431,7 @@ public class DAServiceImpl implements DAService {
 //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
 //                        .export(outPath);
 
-                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size()+1);
+                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size() + 1);
                 CellStyle cellStyle = wb.createCellStyle();
                 Font font = wb.createFont();
 
@@ -485,14 +485,18 @@ public class DAServiceImpl implements DAService {
         List<Map<String, Object>> statistics = this.getHeNanOrderData(params);
         //返回新增异常数据个数
         params.put("num2", "3");
-        List<Map<String, Object>> newAddAbnormal = this.getHeNanOrderData(params);
-        System.out.println("新增异常数据大小:" + newAddAbnormal.size());
-        for (int i = 0; i < newAddAbnormal.size(); i++) {
-            Map<String, Object> temp = newAddAbnormal.get(i);
-            for (String key : temp.keySet()) {
-                String newAddAbnormalNumStr = temp.get(key).toString();
-                System.out.println("新增异常数据条数:" + key + " " + newAddAbnormalNumStr);
-            }
+        List<Map<String, Object>> newAddAbnormal_num = this.getHeNanOrderData(params);
+        Map<String, Object> temp_newAddAbnormal_num = newAddAbnormal_num.get(0);
+        String newAddAbnormalNumStr = "";
+        for (String key : temp_newAddAbnormal_num.keySet()) {
+            newAddAbnormalNumStr = temp_newAddAbnormal_num.get(key).toString();
+            System.out.println("新增异常数据条数:" + key + " " + newAddAbnormalNumStr);
+        }
+        //返回新增异常数据的 结果
+        List<Map<String, Object>> newAddAbnormal_date = new ArrayList<>();
+        if (Integer.valueOf(newAddAbnormalNumStr) != 0) {
+            params.put("num2", "5");
+            newAddAbnormal_date = this.getHeNanOrderData(params);
         }
 
         /*构建文件路径*/
@@ -587,12 +591,18 @@ public class DAServiceImpl implements DAService {
             Map<String, Object> datas = new HashMap();
             datas.put("mail_text", mail_text);
             datas.put("statistics", statistics);
+            datas.put("newAddAbnormalNumStr", newAddAbnormalNumStr);
+
+            if (Integer.valueOf(newAddAbnormalNumStr) != 0) {
+                logger.info("- 加入新增异常数据用于生产邮件里的表");
+                datas.put("newAddAbnormal_date", newAddAbnormal_date);
+            }
 
             Template template = configuration.getTemplate("heNanOrder.ftl");
             String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
             helper.setText(html, true);
 
-//            jms.send(message);
+            jms.send(message);
 
         } catch (Exception e) {
             logger.info("发送邮件异常：" + e.getMessage());
