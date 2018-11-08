@@ -64,7 +64,7 @@ public class DATest_henan {
         //sql参数
         params.put("date", DATE);
         params.put("BU", "BW");
-        params.put("isNew", "是");
+//        params.put("isNew", "是");
 //        params.put("user", "hs1589");
         //获得所有的用户
         String sql = "SELECT * FROM [dbo].[sycm_account] where shop_name like '%河南%'";
@@ -89,9 +89,9 @@ public class DATest_henan {
         Map<String, Object> params = new HashMap<String, Object>(6);
         params.put("date", DATE);
         params.put("BU", "BW");
-        params.put("isNew", "是");
-        params.put("isNewAbnormal", "是");
-        params.put("dataType", "GAP<0");
+//        params.put("isNew", "是");
+//        params.put("isNewAbnormal", "是");
+        params.put("dataType", "cast (GAP as float)<0");
         params.put("dataType2", "GAP <> '退市'");
         daService.getDataHeNanabnormal(params);
     }

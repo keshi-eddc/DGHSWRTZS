@@ -53,6 +53,7 @@ public class DAServiceImpl implements DAService {
 
     private static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     private static SimpleDateFormat df1 = new SimpleDateFormat("yyyy.MM.dd");
+    private final String allStartDate = "2015.01.01";
 
     //正常数据附件匹配
     //异常数据附件匹配
@@ -333,8 +334,9 @@ public class DAServiceImpl implements DAService {
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
                 " 更新日期='" + params.get("date") + "'" +
                 " and BU='" + params.get("BU") + "'" +
-                " and 是否新增='" + params.get("isNew") + "'" +
-                " and 账号='" + params.get("user") + "'";
+//                " and 是否新增='" + params.get("isNew") + "'" +
+                " and 账号='" + params.get("user") + "'" +
+                " and GAP <> '退市'order by cast (GAP as float) asc";
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
         if (mapList.size() > 0) {
@@ -366,7 +368,7 @@ public class DAServiceImpl implements DAService {
             String datemon = StringUtils.substringBetween(datestr, "-", "-");
 
             String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
-                    + "河南省中标产品配送情况汇总 " + params.get("user") + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
+                    + "河南省中标产品配送情况汇总 " + params.get("user") + " " + allStartDate + "_" + last_week_last_day + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
 //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
@@ -403,10 +405,12 @@ public class DAServiceImpl implements DAService {
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
                 " 更新日期='" + params.get("date") + "'" +
                 " and BU='" + params.get("BU") + "'" +
-                " and 是否新增='" + params.get("isNew") + "'" +
-                " and 是否新增异常='" + params.get("isNewAbnormal") + "'" +
+//                " and 是否新增='" + params.get("isNew") + "'" +
+//                " and 是否新增异常='" + params.get("isNewAbnormal") + "'" +
+                " and " + params.get("dataType2") +
                 " and " + params.get("dataType") +
-                " and " + params.get("dataType2");
+                " order by cast (GAP as float) asc";
+        ;
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
         if (mapList.size() > 0) {
@@ -452,7 +456,7 @@ public class DAServiceImpl implements DAService {
 
                 ewb.export(outPath);
 
-                logger.info(" 河南省 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
+                logger.info(" 河南省 " + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
             } catch (Exception e) {
                 logger.error("文件生成异常：" + e.getMessage());
             }
@@ -494,7 +498,7 @@ public class DAServiceImpl implements DAService {
         String newAddAbnormalNumStr = "";
         for (String key : temp_newAddAbnormal_num.keySet()) {
             newAddAbnormalNumStr = temp_newAddAbnormal_num.get(key).toString();
-            System.out.println("新增异常数据条数:" + key + " " + newAddAbnormalNumStr);
+            logger.info("新增异常数据条数:" + key + " " + newAddAbnormalNumStr);
         }
         //返回新增异常数据的 结果
         List<Map<String, Object>> newAddAbnormal_date = new ArrayList<>();
@@ -543,6 +547,7 @@ public class DAServiceImpl implements DAService {
             //正常的标题
             subject = "河南省平台订单数据推送-" + params.get("BU").toString() + "，" + fileDate;
         }
+        logger.info("- 邮件标题：" + subject);
         /*邮件正文*/
         String mail_text = "";
         for (int i = 0; i < text.size(); i++) {
@@ -551,13 +556,14 @@ public class DAServiceImpl implements DAService {
                 mail_text = temp.get(key).toString();
             }
         }
-        logger.info("mail_text:" + mail_text);
+        logger.info("- 邮件正文:" + mail_text);
 
         System.setProperty("mail.mime.splitlongparameters", "false");
         MimeMessage message = jms.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("eddc@earlydata.com");
+//            helper.setFrom("jjmcgaop@earlydata.com");
+            helper.setFrom("jjmcgaop@earlydata.com","JJMC GA OP");
             String to = "keshi.wang@earlydata.com";
             //测试
 //            helper.setTo(to);
