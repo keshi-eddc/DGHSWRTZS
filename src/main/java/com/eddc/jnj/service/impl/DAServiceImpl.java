@@ -403,7 +403,8 @@ public class DAServiceImpl implements DAService {
                 " datetime='" + params.get("date") + "'" +
                 " and bu='" + params.get("BU") + "'" +
                 " and 是否新增='" + params.get("isNew") + "'" +
-                " and " + params.get("dataType");
+                " and " + params.get("dataType") +
+                " and " + params.get("dataType2");
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
         logger.info("执行sql，获得:" + mapList.size() + " 条数据");
@@ -531,7 +532,14 @@ public class DAServiceImpl implements DAService {
         /*附件名称*/
 
         /*邮件主题*/
-        String subject = "河南省平台订单数据推送-" + params.get("BU").toString() + "，" + fileDate;
+        String subject = "";
+        if (Integer.valueOf(newAddAbnormalNumStr) != 0) {
+            //异常的标题
+            subject = "异常！河南省平台订单数据推送-" + params.get("BU").toString() + "，" + fileDate;
+        } else {
+            //正常的标题
+            subject = "河南省平台订单数据推送-" + params.get("BU").toString() + "，" + fileDate;
+        }
         /*邮件正文*/
         String mail_text = "";
         for (int i = 0; i < text.size(); i++) {

@@ -35,6 +35,7 @@ public class DATest_henan {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final String DATE = "2018-10-17";
+//    private static final String DATE = "2018-10-24";
 
     //1.执行存储过程
     //2.mybits 执行sql 拿到返回结果
@@ -88,6 +89,7 @@ public class DATest_henan {
         params.put("BU", "BW");
         params.put("isNew", "是");
         params.put("dataType", "GAP<0");
+        params.put("dataType2", "GAP <> '退市'");
         daService.getDataHeNanabnormal(params);
     }
 

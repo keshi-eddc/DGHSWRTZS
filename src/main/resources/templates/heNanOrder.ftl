@@ -57,7 +57,7 @@
         border-color: #666666;
         background-color: #dedede;
     }
-    /*单元格*/
+    /**/
     table.abnormaltable td {
         /*width: 50px;*/
         /*height: 25px;*/
@@ -103,7 +103,7 @@
         <div class="text">
              新增异常订单有${newAddAbnormalNumStr}条，如下：
         </div>
-        <div style="margin-top: 15px">
+        <div style="margin-top: 15px;width:100%;overflow-x: auto;">
             <table class="abnormaltable">
                 <#list newAddAbnormal_date as exmap>
                     <#if exmap_index = 0>
