@@ -314,7 +314,7 @@ public class DAServiceImpl implements DAService {
             String datemon = StringUtils.substringBetween(datestr, "-", "-");
 
             String outPath = resource.getHeNan_basicPath() + "\\" + "存储过程结果" + "\\" + dateyear + "\\" + datemon + "\\" +
-                    "河南省平台订单数据存储过程结果-" + params.get("date").toString() + " " + last_week_first_day + "_" + last_week_last_day + ".xlsx";
+                    "河南省平台订单数据存储过程结果-" + params.get("date").toString() + " " + last_week_first_day + " " + last_week_last_day + ".xlsx";
             logger.info("文件输出路径:" + outPath);
             try {
                 Export.buildSXSSFExportExcelWorkBook().createSheet("详情页").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(detail)
@@ -331,14 +331,15 @@ public class DAServiceImpl implements DAService {
     public void getDataHeNan(Map params) {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
-                " datetime='" + params.get("date") + "'" +
-                " and bu='" + params.get("BU") + "'" +
+                " 更新日期='" + params.get("date") + "'" +
+                " and BU='" + params.get("BU") + "'" +
                 " and 是否新增='" + params.get("isNew") + "'" +
                 " and 账号='" + params.get("user") + "'";
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
-        logger.info("执行sql，获得:" + mapList.size() + " 条数据");
         if (mapList.size() > 0) {
+            logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+
             SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
             List<String> detail_columnFields = this.getColumnFields(mapList);
             //修改表头
@@ -400,15 +401,17 @@ public class DAServiceImpl implements DAService {
     @Override
     public void getDataHeNanabnormal(Map params) {
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
-                " datetime='" + params.get("date") + "'" +
-                " and bu='" + params.get("BU") + "'" +
+                " 更新日期='" + params.get("date") + "'" +
+                " and BU='" + params.get("BU") + "'" +
                 " and 是否新增='" + params.get("isNew") + "'" +
+                " and 是否新增异常='" + params.get("isNewAbnormal") + "'" +
                 " and " + params.get("dataType") +
                 " and " + params.get("dataType2");
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
-        logger.info("执行sql，获得:" + mapList.size() + " 条数据");
         if (mapList.size() > 0) {
+            logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+
             SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
             List<String> detail_columnFields = this.getColumnFields(mapList);
 
@@ -571,7 +574,7 @@ public class DAServiceImpl implements DAService {
                 for (File filefile : files) {
                     String fileName = filefile.getName();
                     //正常数据的文件
-                    String matchedNormalFileName = "_";
+                    String matchedNormalFileName = "情况汇总";
                     //异常数据的文件
                     String matchedAbnormalFileName = "异常";
                     if (!fileName.contains("副本")) {

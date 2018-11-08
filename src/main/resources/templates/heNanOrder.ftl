@@ -34,7 +34,7 @@
     }
 
     table.abnormaltable {
-        width:4000px;
+        width:3000px;
         text-align: center;
         font-family: Microsoft YaHei;
         font-size:13px;
