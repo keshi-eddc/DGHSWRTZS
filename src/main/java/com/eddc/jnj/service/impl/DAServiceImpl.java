@@ -25,7 +25,7 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
 import javax.mail.internet.MimeMessage;
 import java.io.File;
-import java.text.DateFormat;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -330,73 +330,98 @@ public class DAServiceImpl implements DAService {
     //执行sql,正常数据
     @Override
     public void getDataHeNan(Map params) {
-        DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
-                " 更新日期='" + params.get("date") + "'" +
-                " and BU='" + params.get("BU") + "'" +
-//                " and 是否新增='" + params.get("isNew") + "'" +
-                " and 账号='" + params.get("user") + "'" +
-                " and GAP <> '退市'order by cast (GAP as float) asc";
-        logger.info("sql:   " + sql);
-        List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
-        if (mapList.size() > 0) {
-            logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+        //遍历用户，写到一个表的不同sheet
+        //获得所有的用户
+        String sql_user = "SELECT * FROM [dbo].[sycm_account] where shop_name like '%河南%'";
+        logger.info("- 查询所有用户sql :" + sql_user);
+        List<Map<String, Object>> userListMap = daDao.getaHeNanUsers(sql_user);
+        /*构建导出文件路径*/
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String dateDay = StringUtils.substringAfter(datestr, "-");
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
+                + "河南省中标产品配送情况汇总 " + allStartDate + "_" + dateyear + "." + datemon + "." + dateDay + ".xlsx";
+        logger.info("- 文件输出路径:" + outPath);
+        //初始化 SXSSFWorkbook 的大小
+        String sql_allCount = "select COUNT(1) as allNum from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust";
+        logger.info("- 查询所有Johnson_henan 数据量 :" + sql_allCount);
+        List<Map<String, Object>> allCountListMap = daDao.getaHeNanUsers(sql_allCount);
+        Map<String, Object> allCountMap = allCountListMap.get(0);
+        int rowAWSize = Integer.valueOf(allCountMap.get("allNum").toString());
+//        System.out.println("rowAWSize:" + rowAWSize);
+        SXSSFWorkbook wb = new SXSSFWorkbook(rowAWSize);
+        ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
 
-            SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
-            List<String> detail_columnFields = this.getColumnFields(mapList);
-            //修改表头
-            //设置表的样式
-            //修改列的位置
-
-            logger.info(" 河南省 正常数据 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + " 开始导出数据");
-            /*构建导出文件路径*/
-            Calendar now = Calendar.getInstance();
+        if (userListMap.size() > 0) {
+            logger.info("- 查询到：" + userListMap.size() + " 个用户");
             try {
-                now.setTime(format.parse((String) params.get("date")));
-            } catch (ParseException e) {
+                for (int i = 0; i < userListMap.size(); i++) {
+                    Map<String, Object> usermap = userListMap.get(i);
+                    String userName = usermap.get("name").toString();
+                    logger.info("user: " + userName);
+                    String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
+                            " 更新日期='" + params.get("date") + "'" +
+                            " and BU='" + params.get("BU") + "'" +
+                            //                " and 本周新增='" + params.get("isNew") + "'" +
+                            " and 账号='" + userName + "'" +
+                            " and GAP <> '退市'order by cast (GAP as float) asc";
+                    logger.info("sql:   " + sql);
+                    List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
+                    if (mapList.size() > 0) {
+                        logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+
+                        SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
+                        List<String> detail_columnFields = this.getColumnFields(mapList);
+
+
+                        logger.info(" 河南省 正常数据 " + userName + " " + params.get("BU") + " 日期：" + params.get("date") + " 数据导入表格");
+                        //数据导入表格
+                        try {
+                            //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
+                            //                        .export(outPath);
+//                            wb = new SXSSFWorkbook(mapList.size() + 1);
+                            ewb.createSheet(userName).setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+
+                        } catch (Exception e) {
+                            logger.error("文件生成异常：" + e.getMessage());
+                        }
+                        //设置表的样式
+                        try {
+                            CellStyle cellStyle = wb.createCellStyle();
+                            Font font = wb.createFont();
+                            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
+                            cellStyle.setFont(font);
+                            Sheet sheet = wb.getSheet(userName);
+//                            for (int rowNum = 0; rowNum < sheet.getLastRowNum(); rowNum++) {
+//                                System.out.println(rowNum + " ");
+//                                Row row = sheet.getRow(rowNum);
+//                                for (Cell cell : row) {
+//                                    cell.setCellStyle(cellStyle);
+//                                    System.out.print(cell.toString() + " ");
+//                                }
+//                                System.out.println("");
+//                            }
+                            Row row = sheet.getRow(0);
+                            for (Cell cell : row) {
+                                cell.setCellStyle(cellStyle);
+                            }
+                        } catch (Exception e) {
+                            logger.error("表格设置格式错误，请检查。");
+                            e.printStackTrace();
+                        }
+
+                    } else {
+                        logger.error(userName + " ,执行sql，正常数据，获得数据 0 个");
+                    }
+                }
+                ewb.export(outPath);
+                logger.info(" 河南省 正常数据 " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-            String now_date_str = DateFormatUtils.format(now, "yyyy-MM-dd");
-            now.add(Calendar.DAY_OF_MONTH, Integer.valueOf(params.get("num").toString()));
-            now.set(Calendar.DAY_OF_WEEK, now.getActualMinimum(Calendar.DAY_OF_WEEK) + 3);
-            String last_week_first_day = DateFormatUtils.format(now, "yyyy.MM.dd");
-            now.add(Calendar.DAY_OF_MONTH, -Integer.valueOf(params.get("num").toString()));
-            String last_week_last_day = DateFormatUtils.format(now, "yyyy.MM.dd");
-
-            String datestr = params.get("date").toString();
-            String dateyear = StringUtils.substringBefore(datestr, "-");
-            String datemon = StringUtils.substringBetween(datestr, "-", "-");
-
-            String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
-                    + "河南省中标产品配送情况汇总 " + params.get("user") + " " + allStartDate + "_" + last_week_last_day + ".xlsx";
-            logger.info("文件输出路径:" + outPath);
-            try {
-//                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
-//                        .export(outPath);
-
-                SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size() + 1);
-                CellStyle cellStyle = wb.createCellStyle();
-                Font font = wb.createFont();
-
-                ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
-                ewb.createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
-
-                font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
-                cellStyle.setFont(font);
-                Sheet sheet = wb.getSheetAt(0);
-                Row row = sheet.getRow(0);
-                for (Cell cell : row) {
-                    cell.setCellStyle(cellStyle);
-                }
-
-                ewb.export(outPath);
-
-                logger.info(" 河南省 " + params.get("user") + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
-            } catch (Exception e) {
-                logger.error("文件生成异常：" + e.getMessage());
-            }
         } else {
-            logger.error("执行sql，获得数据 0 个");
+            logger.error("没有查询到用户！！");
         }
     }
 
@@ -449,11 +474,11 @@ public class DAServiceImpl implements DAService {
                 font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
                 cellStyle.setFont(font);
                 Sheet sheet = wb.getSheetAt(0);
+                //设置表头的样式
                 Row row = sheet.getRow(0);
                 for (Cell cell : row) {
                     cell.setCellStyle(cellStyle);
                 }
-
                 ewb.export(outPath);
 
                 logger.info(" 河南省 " + " " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
@@ -563,7 +588,7 @@ public class DAServiceImpl implements DAService {
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 //            helper.setFrom("jjmcgaop@earlydata.com");
-            helper.setFrom("jjmcgaop@earlydata.com","JJMC GA OP");
+            helper.setFrom("jjmcgaop@earlydata.com", "JJMC GA OP");
             String to = "keshi.wang@earlydata.com";
             //测试
 //            helper.setTo(to);
