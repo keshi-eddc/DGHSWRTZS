@@ -34,7 +34,7 @@
     }
 
     table.abnormaltable {
-        width:1000px;
+        /*width:2000px;*/
         text-align: center;
         font-family: Microsoft YaHei;
         font-size:13px;
@@ -47,7 +47,7 @@
     }
     /*表头*/
     table.abnormaltable th {
-        /*width: ;*/
+        width: 100;
         /*height: 25px;*/
         table-layout:fixed;
         word-break:break-all;
@@ -59,7 +59,7 @@
     }
     /**/
     table.abnormaltable td {
-        /*width: 50px;*/
+        /*width: 200px;*/
         /*height: 25px;*/
         text-align: left;
         table-layout:fixed;
@@ -102,7 +102,7 @@
         <#--判断存在 新增异常数据-->
         <#if newAddAbnormal_date ??>
         <div class="text">
-             新增异常订单有${newAddAbnormalNumStr}条，如下：
+             异常订单有${newAddAbnormalNumStr}条，如下：
         </div>
         <div style="margin-top: 15px;width:100%;overflow-x: auto;">
             <table class="abnormaltable">

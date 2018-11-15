@@ -466,9 +466,9 @@ public class DAServiceImpl implements DAService {
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
                 " 更新日期='" + params.get("date") + "'" +
                 " and BU='" + params.get("BU") + "'" +
-                " GAP <> '退市'" +
+                " and GAP <> '退市'" +
                 " and cast (GAP as float)<0" +
-                " 本周新增 desc, cast (GAP as float) asc";
+                " order by 本周新增 desc, cast (GAP as float) asc";
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
         if (mapList.size() > 0) {
