@@ -366,9 +366,9 @@ public class DAServiceImpl implements DAService {
                     String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
                             " 更新日期='" + params.get("date") + "'" +
                             " and BU='" + params.get("BU") + "'" +
-                            //                " and 本周新增='" + params.get("isNew") + "'" +
                             " and 账号='" + userName + "'" +
-                            " and GAP <> '退市'order by cast (GAP as float) asc";
+                            " and GAP <> '退市'" +
+                            " order by 本周新增 desc,是否异常 desc,cast (GAP as float) asc";
                     logger.info("sql:   " + sql);
                     List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
                     if (mapList.size() > 0) {
@@ -393,13 +393,14 @@ public class DAServiceImpl implements DAService {
                         try {
                             //设置表头加粗
                             CellStyle headCellStyle = wb.createCellStyle();
-                            Font font = wb.createFont();
-                            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
-                            headCellStyle.setFont(font);
+                            Font headFont = wb.createFont();
+                            headFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
+                            headCellStyle.setFont(headFont);
                             Sheet sheet = wb.getSheet(userName);
                             Row headRow = sheet.getRow(0);
                             int goalPosition_thisWeekNewAdd = 0;
                             int goalPosition_isAbnormal = 0;
+                            int goalPosition_remark = 0;
                             for (Cell cell : headRow) {
                                 cell.setCellStyle(headCellStyle);
                                 String cellValue = cell.toString();
@@ -407,28 +408,38 @@ public class DAServiceImpl implements DAService {
                                     goalPosition_thisWeekNewAdd = cell.getColumnIndex();
                                 } else if (cellValue.equals("是否异常")) {
                                     goalPosition_isAbnormal = cell.getColumnIndex();
+                                } else if (cellValue.equals("备注提示")) {
+                                    goalPosition_remark = cell.getColumnIndex();
                                 }
                             }
                             //设置目标列背景色
-//                            CellStyle goalCellStyle = wb.createCellStyle();
                             XSSFCellStyle goalCellStyle = (XSSFCellStyle) wb.createCellStyle();
-//                            goalCellStyle.setFillBackgroundColor(HSSFColor.YELLOW.index);
-//                            goalCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
                             goalCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
                             goalCellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-//                            goalCellStyle.setFillBackgroundColor(HSSFColor.YELLOW.index);
-
+                            //设置字体（在发现设置背景颜色后字体改变后）
+                            Font goalFont = wb.createFont();
+                            goalFont.setFontName("Calibri");
+                            goalCellStyle.setFont(goalFont);
                             for (int rowNum = 1; rowNum < sheet.getLastRowNum() + 1; rowNum++) {
 //                                System.out.println(rowNum + " ");
                                 Row row = sheet.getRow(rowNum);
                                 String goalValue_thisWeekNewAdd = row.getCell(goalPosition_thisWeekNewAdd).toString();
                                 String goalValue_isAbnormal = row.getCell(goalPosition_isAbnormal).toString();
+                                String goalValue__remark = row.getCell(goalPosition_remark).toString();
 
                                 if (goalValue_thisWeekNewAdd.equals("是") && goalValue_isAbnormal.equals("是")) {
                                     for (Cell cell : row) {
                                         cell.setCellStyle(goalCellStyle);
 //                                        System.out.print(cell.toString() + " ");
                                     }
+                                }
+                                if (goalValue__remark.equals("已红冲退货")) {
+                                    XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
+                                    Font goalFont_red = wb.createFont();
+                                    //字体颜色
+                                    goalFont_red.setColor(HSSFColor.RED.index);
+                                    goalCellStyle_red.setFont(goalFont_red);
+                                    row.getCell(goalPosition_remark).setCellStyle(goalCellStyle_red);
                                 }
                             }
                         } catch (Exception e) {
@@ -455,12 +466,9 @@ public class DAServiceImpl implements DAService {
         String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
                 " 更新日期='" + params.get("date") + "'" +
                 " and BU='" + params.get("BU") + "'" +
-//                " and 是否新增='" + params.get("isNew") + "'" +
-//                " and 是否新增异常='" + params.get("isNewAbnormal") + "'" +
-                " and " + params.get("dataType2") +
-                " and " + params.get("dataType") +
-                " order by cast (GAP as float) asc";
-        ;
+                " GAP <> '退市'" +
+                " and cast (GAP as float)<0" +
+                " 本周新增 desc, cast (GAP as float) asc";
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
         if (mapList.size() > 0) {

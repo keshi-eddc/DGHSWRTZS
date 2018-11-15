@@ -61,6 +61,7 @@
     table.abnormaltable td {
         /*width: 50px;*/
         /*height: 25px;*/
+        text-align: left;
         table-layout:fixed;
         word-break:break-all;
         border-width: 1px;
