@@ -11,9 +11,12 @@ import freemarker.template.Template;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -339,7 +342,7 @@ public class DAServiceImpl implements DAService {
         String datestr = params.get("date").toString();
         String dateyear = StringUtils.substringBefore(datestr, "-");
         String datemon = StringUtils.substringBetween(datestr, "-", "-");
-        String dateDay = StringUtils.substringAfter(datestr, "-");
+        String dateDay = StringUtils.substringAfterLast(datestr, "-");
         String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
                 + "河南省中标产品配送情况汇总 " + allStartDate + "_" + dateyear + "." + datemon + "." + dateDay + ".xlsx";
         logger.info("- 文件输出路径:" + outPath);
@@ -388,23 +391,45 @@ public class DAServiceImpl implements DAService {
                         }
                         //设置表的样式
                         try {
-                            CellStyle cellStyle = wb.createCellStyle();
+                            //设置表头加粗
+                            CellStyle headCellStyle = wb.createCellStyle();
                             Font font = wb.createFont();
                             font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
-                            cellStyle.setFont(font);
+                            headCellStyle.setFont(font);
                             Sheet sheet = wb.getSheet(userName);
-//                            for (int rowNum = 0; rowNum < sheet.getLastRowNum(); rowNum++) {
+                            Row headRow = sheet.getRow(0);
+                            int goalPosition_thisWeekNewAdd = 0;
+                            int goalPosition_isAbnormal = 0;
+                            for (Cell cell : headRow) {
+                                cell.setCellStyle(headCellStyle);
+                                String cellValue = cell.toString();
+                                if (cellValue.equals("本周新增")) {
+                                    goalPosition_thisWeekNewAdd = cell.getColumnIndex();
+                                } else if (cellValue.equals("是否异常")) {
+                                    goalPosition_isAbnormal = cell.getColumnIndex();
+                                }
+                            }
+                            //设置目标列背景色
+//                            CellStyle goalCellStyle = wb.createCellStyle();
+                            XSSFCellStyle goalCellStyle = (XSSFCellStyle) wb.createCellStyle();
+//                            goalCellStyle.setFillBackgroundColor(HSSFColor.YELLOW.index);
+//                            goalCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
+                            goalCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
+                            goalCellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+//                            goalCellStyle.setFillBackgroundColor(HSSFColor.YELLOW.index);
+
+                            for (int rowNum = 1; rowNum < sheet.getLastRowNum() + 1; rowNum++) {
 //                                System.out.println(rowNum + " ");
-//                                Row row = sheet.getRow(rowNum);
-//                                for (Cell cell : row) {
-//                                    cell.setCellStyle(cellStyle);
-//                                    System.out.print(cell.toString() + " ");
-//                                }
-//                                System.out.println("");
-//                            }
-                            Row row = sheet.getRow(0);
-                            for (Cell cell : row) {
-                                cell.setCellStyle(cellStyle);
+                                Row row = sheet.getRow(rowNum);
+                                String goalValue_thisWeekNewAdd = row.getCell(goalPosition_thisWeekNewAdd).toString();
+                                String goalValue_isAbnormal = row.getCell(goalPosition_isAbnormal).toString();
+
+                                if (goalValue_thisWeekNewAdd.equals("是") && goalValue_isAbnormal.equals("是")) {
+                                    for (Cell cell : row) {
+                                        cell.setCellStyle(goalCellStyle);
+//                                        System.out.print(cell.toString() + " ");
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             logger.error("表格设置格式错误，请检查。");

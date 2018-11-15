@@ -34,8 +34,8 @@ public class DATest_henan {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     //      private static final String DATE = "2018-10-24";
-    private static final String DATE = "2018-11-07";
-//    private static final String DATE = "2018-11-14";
+//    private static final String DATE = "2018-11-07";
+    private static final String DATE = "2018-11-14";
 
 
     //1.执行存储过程
@@ -64,24 +64,6 @@ public class DATest_henan {
         params.put("date", DATE);
         params.put("BU", "BW");
         daService.getDataHeNan(params);
-
-//        params.put("isNew", "是");
-//        params.put("user", "hs1589");
-//        //获得所有的用户
-//        String sql = "SELECT * FROM [dbo].[sycm_account] where shop_name like '%河南%'";
-//        logger.info("- 查询所有用户sql :" + sql);
-//        List<Map<String, Object>> userListMap = daDao.getaHeNanUsers(sql);
-//        if (userListMap.size() > 0) {
-//            logger.info("- 查询到：" + userListMap.size() + " 个用户");
-//            for (Map<String, Object> usermap : userListMap) {
-//                String userName = usermap.get("name").toString();
-//                logger.info("user: " + userName);
-//                params.put("user", userName);
-//                daService.getDataHeNan(params);
-//            }
-//        } else {
-//            logger.error("没有查询到用户！！");
-//        }
     }
 
     //3.导出获得异常数据的附件
