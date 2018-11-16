@@ -335,9 +335,9 @@ public class DAServiceImpl implements DAService {
     public void getDataHeNan(Map params) {
         //遍历用户，写到一个表的不同sheet
         //获得所有的用户
-        String sql_user = "SELECT * FROM [dbo].[sycm_account] where shop_name like '%河南%'";
-        logger.info("- 查询所有用户sql :" + sql_user);
-        List<Map<String, Object>> userListMap = daDao.getaHeNanUsers(sql_user);
+//        String sql_user = "SELECT * FROM [dbo].[sycm_account] where shop_name like '%河南%'";
+//        logger.info("- 查询所有用户sql :" + sql_user);
+//        List<Map<String, Object>> userListMap = daDao.getaHeNanUsers(sql_user);
         /*构建导出文件路径*/
         String datestr = params.get("date").toString();
         String dateyear = StringUtils.substringBefore(datestr, "-");
@@ -355,109 +355,107 @@ public class DAServiceImpl implements DAService {
 //        System.out.println("rowAWSize:" + rowAWSize);
         SXSSFWorkbook wb = new SXSSFWorkbook(rowAWSize);
         ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
+        //创建sheet
+//        SheetExportHandler sheetExportHandler = null;
+//        try {
+//            sheetExportHandler = ewb.createSheet("Sheet1");
+//        } catch (ExportException e) {
+//            e.printStackTrace();
+//        }
 
-        if (userListMap.size() > 0) {
-            logger.info("- 查询到：" + userListMap.size() + " 个用户");
-            try {
-                for (int i = 0; i < userListMap.size(); i++) {
-                    Map<String, Object> usermap = userListMap.get(i);
-                    String userName = usermap.get("name").toString();
-                    logger.info("user: " + userName);
-                    String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
-                            " 更新日期='" + params.get("date") + "'" +
-                            " and BU='" + params.get("BU") + "'" +
-                            " and 账号='" + userName + "'" +
-                            " and GAP <> '退市'" +
-                            " order by 本周新增 desc,是否异常 desc,cast (GAP as float) asc";
-                    logger.info("sql:   " + sql);
-                    List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
-                    if (mapList.size() > 0) {
-                        logger.info("执行sql，获得:" + mapList.size() + " 条数据");
+        try {
+            String sql = "select * from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust  where " +
+                    " 更新日期='" + params.get("date") + "'" +
+                    " and BU='" + params.get("BU") + "'" +
+//                            " and 账号='" + userName + "'" +
+                    " and GAP <> '退市'" +
+                    " order by 本周新增 desc,是否异常 desc,cast (GAP as float) asc";
+            logger.info("sql:   " + sql);
+            List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
+            if (mapList.size() > 0) {
+                logger.info("执行sql，获得:" + mapList.size() + " 条数据");
 
-                        SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
-                        List<String> detail_columnFields = this.getColumnFields(mapList);
+                SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
+                List<String> detail_columnFields = this.getColumnFields(mapList);
 
-
-                        logger.info(" 河南省 正常数据 " + userName + " " + params.get("BU") + " 日期：" + params.get("date") + " 数据导入表格");
-                        //数据导入表格
-                        try {
-                            //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
-                            //                        .export(outPath);
-//                            wb = new SXSSFWorkbook(mapList.size() + 1);
-                            ewb.createSheet(userName).setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
-
-                        } catch (Exception e) {
-                            logger.error("文件生成异常：" + e.getMessage());
-                        }
-                        //设置表的样式
-                        try {
-                            //设置表头加粗
-                            CellStyle headCellStyle = wb.createCellStyle();
-                            Font headFont = wb.createFont();
-                            headFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
-                            headCellStyle.setFont(headFont);
-                            Sheet sheet = wb.getSheet(userName);
-                            Row headRow = sheet.getRow(0);
-                            int goalPosition_thisWeekNewAdd = 0;
-                            int goalPosition_isAbnormal = 0;
-                            int goalPosition_remark = 0;
-                            for (Cell cell : headRow) {
-                                cell.setCellStyle(headCellStyle);
-                                String cellValue = cell.toString();
-                                if (cellValue.equals("本周新增")) {
-                                    goalPosition_thisWeekNewAdd = cell.getColumnIndex();
-                                } else if (cellValue.equals("是否异常")) {
-                                    goalPosition_isAbnormal = cell.getColumnIndex();
-                                } else if (cellValue.equals("备注提示")) {
-                                    goalPosition_remark = cell.getColumnIndex();
-                                }
-                            }
-                            //设置目标列背景色
-                            XSSFCellStyle goalCellStyle = (XSSFCellStyle) wb.createCellStyle();
-                            goalCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
-                            goalCellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-                            //设置字体（在发现设置背景颜色后字体改变后）
-                            Font goalFont = wb.createFont();
-                            goalFont.setFontName("Calibri");
-                            goalCellStyle.setFont(goalFont);
-                            for (int rowNum = 1; rowNum < sheet.getLastRowNum() + 1; rowNum++) {
-//                                System.out.println(rowNum + " ");
-                                Row row = sheet.getRow(rowNum);
-                                String goalValue_thisWeekNewAdd = row.getCell(goalPosition_thisWeekNewAdd).toString();
-                                String goalValue_isAbnormal = row.getCell(goalPosition_isAbnormal).toString();
-                                String goalValue__remark = row.getCell(goalPosition_remark).toString();
-
-                                if (goalValue_thisWeekNewAdd.equals("是") && goalValue_isAbnormal.equals("是")) {
-                                    for (Cell cell : row) {
-                                        cell.setCellStyle(goalCellStyle);
-//                                        System.out.print(cell.toString() + " ");
-                                    }
-                                }
-                                if (goalValue__remark.equals("已红冲退货")) {
-                                    XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
-                                    Font goalFont_red = wb.createFont();
-                                    //字体颜色
-                                    goalFont_red.setColor(HSSFColor.RED.index);
-                                    goalCellStyle_red.setFont(goalFont_red);
-                                    row.getCell(goalPosition_remark).setCellStyle(goalCellStyle_red);
-                                }
-                            }
-                        } catch (Exception e) {
-                            logger.error("表格设置格式错误，请检查。");
-                            e.printStackTrace();
-                        }
-
-                    } else {
-                        logger.error(userName + " ,执行sql，正常数据，获得数据 0 个");
-                    }
+                logger.info(" 河南省 正常数据 " + params.get("BU") + " 日期：" + params.get("date") + " 数据导入表格");
+                //数据导入表格
+                try {
+//                    //                Export.buildSXSSFExportExcelWorkBook().createSheet("Sheet0").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList)
+//                    //                        .export(outPath);
+////                            wb = new SXSSFWorkbook(mapList.size() + 1);
+//                    if (i == 0) {
+//                        sheetExportHandler.setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+//                    } else {
+//                        sheetExportHandler.setColumnFields(detail_columnFields).importData(mapList);
+//                    }
+                    //创建以userName为sheet 多个
+                    ewb.createSheet("Sheet1").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+                } catch (Exception e) {
+                    logger.error("文件生成异常：" + e.getMessage());
                 }
-                ewb.export(outPath);
-                logger.info(" 河南省 正常数据 " + params.get("BU") + " 日期：" + params.get("date") + "导出数据完毕");
-            } catch (IOException e) {
-                e.printStackTrace();
+                //设置表的样式
+                try {
+                    //设置表头加粗
+                    CellStyle headCellStyle = wb.createCellStyle();
+                    Font headFont = wb.createFont();
+                    headFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//粗体显示
+                    headCellStyle.setFont(headFont);
+                    Sheet sheet = wb.getSheetAt(0);
+                    Row headRow = sheet.getRow(0);
+                    int goalPosition_thisWeekNewAdd = 0;
+                    int goalPosition_isAbnormal = 0;
+                    int goalPosition_remark = 0;
+                    for (Cell cell : headRow) {
+                        cell.setCellStyle(headCellStyle);
+                        String cellValue = cell.toString();
+                        if (cellValue.equals("本周新增")) {
+                            goalPosition_thisWeekNewAdd = cell.getColumnIndex();
+                        } else if (cellValue.equals("是否异常")) {
+                            goalPosition_isAbnormal = cell.getColumnIndex();
+                        } else if (cellValue.equals("备注提示")) {
+                            goalPosition_remark = cell.getColumnIndex();
+                        }
+                    }
+                    //设置目标列背景色
+                    XSSFCellStyle goalCellStyle = (XSSFCellStyle) wb.createCellStyle();
+                    goalCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
+                    goalCellStyle.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+                    //设置字体（在发现设置背景颜色后字体改变后）
+                    Font goalFont = wb.createFont();
+                    goalFont.setFontName("Calibri");
+                    goalCellStyle.setFont(goalFont);
+                    for (int rowNum = 1; rowNum < sheet.getLastRowNum() + 1; rowNum++) {
+//                                System.out.println(rowNum + " ");
+                        Row row = sheet.getRow(rowNum);
+                        String goalValue_thisWeekNewAdd = row.getCell(goalPosition_thisWeekNewAdd).toString();
+                        String goalValue_isAbnormal = row.getCell(goalPosition_isAbnormal).toString();
+                        String goalValue__remark = row.getCell(goalPosition_remark).toString();
+
+                        if (goalValue_thisWeekNewAdd.equals("是") && goalValue_isAbnormal.equals("是")) {
+                            for (Cell cell : row) {
+                                cell.setCellStyle(goalCellStyle);
+//                                        System.out.print(cell.toString() + " ");
+                            }
+                        }
+                        if (goalValue__remark.equals("已红冲退货")) {
+                            XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
+                            Font goalFont_red = wb.createFont();
+                            //字体颜色
+                            goalFont_red.setColor(HSSFColor.RED.index);
+                            goalCellStyle_red.setFont(goalFont_red);
+                            row.getCell(goalPosition_remark).setCellStyle(goalCellStyle_red);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.error("表格设置格式错误，请检查。");
+                    e.printStackTrace();
+                }
             }
-        } else {
-            logger.error("没有查询到用户！！");
+            ewb.export(outPath);
+            logger.info(" 河南省 正常数据 " + params.get("BU") + " 日期：" + params.get("date") + " 导出数据完毕");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -468,6 +466,7 @@ public class DAServiceImpl implements DAService {
                 " and BU='" + params.get("BU") + "'" +
                 " and GAP <> '退市'" +
                 " and cast (GAP as float)<0" +
+                " and 备注提示 <>'已红冲退货'" +
                 " order by 本周新增 desc, cast (GAP as float) asc";
         logger.info("sql:   " + sql);
         List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
