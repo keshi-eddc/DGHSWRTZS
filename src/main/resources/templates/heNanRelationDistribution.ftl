@@ -13,7 +13,7 @@
             Dear All，
         </div>
         <div class="text">
-            请查收来自GA OP团队河南省平台订单数据推送。
+            请查收来自GA OP团队河南省平台配送企业数据推送。
         </div>
         <div class="text">附件为河南省平台${mail_text}最新的配送企业数据，请查收，谢谢！</div>
         <div class="text"><br></div>
