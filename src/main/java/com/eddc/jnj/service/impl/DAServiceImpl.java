@@ -637,9 +637,9 @@ public class DAServiceImpl implements DAService {
                 for (File filefile : files) {
                     String fileName = filefile.getName();
                     //正常数据的文件
-                    String matchedNormalFileName = "情况汇总";
+                    String matchedNormalFileName = "河南省中标产品配送情况汇总";
                     //异常数据的文件
-                    String matchedAbnormalFileName = "异常";
+                    String matchedAbnormalFileName = "河南省平台异常订单数据";
                     if (!fileName.contains("副本")) {
                         if (fileName.contains(matchedNormalFileName)) {
                             if (fileName.contains("_" + fileDate)) {
