@@ -125,7 +125,7 @@
         </#if>
     </div>
         <div class="text">
-            <div class="text">如有问题，请与GA OP专员谈艳阳联系，联系方式：ytan29@its.jnj.com 电话：13816069636。此邮箱为公共邮箱，请勿直接回复。谢谢！</div>
+            <div class="text">如有问题，请与GA OP专员郑增微联系，联系方式：zzheng3@its.jnj.com 电话：18500289813。此邮箱为公共邮箱，请勿直接回复。谢谢！</div>
             <div class="text" style="font-weight: bold; ">JJMC GA Operation Team</div>
         </div>
     </body>

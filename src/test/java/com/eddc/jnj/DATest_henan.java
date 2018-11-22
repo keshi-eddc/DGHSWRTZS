@@ -35,7 +35,7 @@ public class DATest_henan {
 
     //      private static final String DATE = "2018-10-24";
 //    private static final String DATE = "2018-11-07";
-    private static final String DATE = "2018-11-14";
+    private static final String DATE = "2018-11-21";
 
 
     //1.执行存储过程
