@@ -31,5 +31,8 @@ public interface DAService {
 
     /*河南省平台配送企业数据推送*/
     //1.获得邮件附件
+    void getHeNanRelationDistributionData(Map params);
+
     //2.发送邮件
+    void sentHeNanRelationDistributionEmail(Map params);
 }

@@ -218,41 +218,41 @@ public class DAServiceImpl implements DAService {
     public SXSSFExcelTitle[][] getTitles(List<Map<String, Object>> datas) {
         List<String> columnFields = new ArrayList<>();
         for (String key : datas.get(0).keySet()) {
-            if (key.equals("link")) {
-                key = "操作link";
-            } else if (key.equals("product_code")) {
-                key = "产品代码";
-            } else if (key.equals("purchaseListName")) {
-                key = "采购单名称";
-            } else if (key.equals("logistics")) {
-                key = "配送企业";
-            } else if (key.equals("hospital")) {
-                key = "采购医院";
-            } else if (key.equals("price_limit")) {
-                key = "采购限价";
-            } else if (key.equals("purchasePrice")) {
-                key = "采购价";
-            } else if (key.equals("purchaseCnt")) {
-                key = "采购量";
-            } else if (key.equals("deliveryCnt")) {
-                key = "配送量";
-            } else if (key.equals("inboundCnt")) {
-                key = "入库总量";
-            } else if (key.equals("returnedCnt")) {
-                key = "退货量";
-            } else if (key.equals("begin_time")) {
-                key = "开始时间";
-            } else if (key.equals("end_time")) {
-                key = "结束时间";
-            } else if (key.equals("delivery_time")) {
-                key = "企业配送时间";
-            } else if (key.equals("reached_time")) {
-                key = "医院入库时间";
-            } else if (key.equals("insert_time")) {
-                key = "数据更新时间";
-            } else if (key.equals("datetime")) {
-                key = "更新日期";
-            }
+//            if (key.equals("link")) {
+//                key = "操作link";
+//            } else if (key.equals("product_code")) {
+//                key = "产品代码";
+//            } else if (key.equals("purchaseListName")) {
+//                key = "采购单名称";
+//            } else if (key.equals("logistics")) {
+//                key = "配送企业";
+//            } else if (key.equals("hospital")) {
+//                key = "采购医院";
+//            } else if (key.equals("price_limit")) {
+//                key = "采购限价";
+//            } else if (key.equals("purchasePrice")) {
+//                key = "采购价";
+//            } else if (key.equals("purchaseCnt")) {
+//                key = "采购量";
+//            } else if (key.equals("deliveryCnt")) {
+//                key = "配送量";
+//            } else if (key.equals("inboundCnt")) {
+//                key = "入库总量";
+//            } else if (key.equals("returnedCnt")) {
+//                key = "退货量";
+//            } else if (key.equals("begin_time")) {
+//                key = "开始时间";
+//            } else if (key.equals("end_time")) {
+//                key = "结束时间";
+//            } else if (key.equals("delivery_time")) {
+//                key = "企业配送时间";
+//            } else if (key.equals("reached_time")) {
+//                key = "医院入库时间";
+//            } else if (key.equals("insert_time")) {
+//                key = "数据更新时间";
+//            } else if (key.equals("datetime")) {
+//                key = "更新日期";
+//            }
 //            System.out.println("表头：" + key);
             columnFields.add(key);
         }
@@ -681,6 +681,166 @@ public class DAServiceImpl implements DAService {
         } catch (Exception e) {
             logger.info("发送邮件异常：" + e.getMessage());
         }
+    }
 
+    /******************河南省平台配送企业数据推送**************************/
+    @Override
+    public void getHeNanRelationDistributionData(Map params) {
+        logger.info("- 开始获取 河南省平台配送企业 附件");
+        //1.sql获得数据
+        String sql = "SELECT [account] as 账号" +
+                "      ,[product_code] as 产品代码" +
+                "      ,[category] as 大类" +
+                "      ,[category_one] as 一级分类" +
+                "      ,[category_two] as 二级分类" +
+                "      ,[directory_name] as 目录名称" +
+                "      ,[registration_certificate_product_name] as 注册证产品名称" +
+                "      ,[brand] as 品牌" +
+                "      ,[specifications] as 规格" +
+                "      ,[product_model] as 型号" +
+                "      ,[unit] as 单位" +
+                "      ,[production_enterprise] as 生产企业" +
+                "      ,[remarks] as 备注" +
+                "      ,[purchase_price_limit] as 采购限价" +
+                "      ,[bid_winner] as [中标人(及其委托的代理人)]" +
+                "      ,[confirm_status]  as 确认状态" +
+                "      ,[agent] as 中标人维护其委托的代理人" +
+                "      ,[no_deal] as 未发生交易   " +
+                "      ,convert(date,[insert_Time],23) as 数据更新时间     " +
+                "  FROM [dbo].[Johnson_henan_RelationDistribution_list]" +
+                "  where convert(date,[insert_Time],23)=(select max(convert(date,[insert_Time],23)) from [Johnson_henan_RelationDistribution_list])";
+        logger.info("sql:" + sql);
+        List<Map<String, Object>> mapList = daDao.getDataHeNan(sql);
+        if (mapList.size() > 0) {
+            logger.info("- 获得：" + mapList.size() + " 条数据");
+
+        } else {
+            logger.error("！！！未获得数据");
+        }
+        //2.处理数据
+        //存储数据的Workbook
+        SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size() + 1);
+        ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
+        //表头 和 内容
+        SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
+        List<String> detail_columnFields = this.getColumnFields(mapList);
+
+        //3.导出数据
+        //文件输出路径
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String fileDate = dateyear + "." + datemon;
+        String fileName = "河南省配送企业数据汇总 " + fileDate + ".xlsx";
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        try {
+            //数据导入表格
+            ewb.createSheet("Sheet1").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+        } catch (Exception e) {
+            logger.error("文件生成异常：" + e.getMessage());
+        }
+        //设置表的样式
+        try {
+            //设置表头加粗
+            CellStyle headCellStyle = wb.createCellStyle();
+            Font headFont = wb.createFont();
+            //粗体显示
+            headFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            headCellStyle.setFont(headFont);
+            Sheet sheet = wb.getSheetAt(0);
+            Row headRow = sheet.getRow(0);
+            for (Cell cell : headRow) {
+                cell.setCellStyle(headCellStyle);
+            }
+        } catch (Exception e) {
+            logger.error("表格设置格式错误，请检查。");
+            e.printStackTrace();
+        }
+        try {
+            //表格输出到文件
+            ewb.export(outPath);
+            logger.info("- 附件导出完成，路径：" + outPath);
+        } catch (IOException e) {
+            logger.error("！！！表格输出到文件 错误");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void sentHeNanRelationDistributionEmail(Map params) {
+        logger.info("- 开始发送 河南省平台配送企业数据推送");
+        /*获取所有的邮件接收者*/
+        params.put("sendType", "customer");
+        List<Map<String, Object>> users = daDao.selectUsersByProviceByBu(params);
+        String[] tos = new String[users.size()];
+        for (int i = 0; i < users.size(); i++) {
+            tos[i] = users.get(i).get("mail_address").toString();
+            logger.info("- 发送给：" + tos[i].toString());
+        }
+        /*获取所有的邮件抄送者*/
+        params.put("sendType", "copyto");
+        List<Map<String, Object>> ccusers = daDao.selectUsersByProviceByBu(params);
+        String[] cctos = new String[ccusers.size()];
+        for (int i = 0; i < ccusers.size(); i++) {
+            cctos[i] = ccusers.get(i).get("mail_address").toString();
+            logger.info("- 抄送给：" + cctos[i].toString());
+        }
+        /*附件文件*/
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String fileDate = dateyear + "." + datemon;
+        /*附件名称*/
+        String fileName = "河南省配送企业数据汇总 " + fileDate + ".xlsx";
+        /*构建文件路径*/
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        File file = new File(outPath);
+        //检查路径
+        if (!file.isDirectory()) {
+            if (file.exists()) {
+                logger.info("- 附件文件:" + outPath);
+            } else {
+                logger.error("！！！附件文件,路径错误");
+                return;
+            }
+        } else {
+            logger.error("！！！附件文件,路径错误");
+            return;
+        }
+        /*邮件主题*/
+        String subject = "河南省平台配送企业数据推送，" + fileDate;
+        logger.info("- 邮件主题：" + subject);
+        /*邮件正文*/
+        String mail_text = dateyear + "年" + datemon + "月";
+        /*邮件发送*/
+        System.setProperty("mail.mime.splitlongparameters", "false");
+        MimeMessage message = jms.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("jjmcgaop@earlydata.com", "JJMC GA OP");
+            String to = "keshi.wang@earlydata.com";
+            //测试
+            //helper.setTo(to);
+            //正式
+            //发送
+            helper.setTo(tos);
+            //抄送
+            if (cctos.length > 0) {
+                helper.setCc(cctos);
+            }
+            helper.setSubject(subject);
+            FileSystemResource fileAttachment = new FileSystemResource(new File(outPath));
+            //添加附件
+            helper.addAttachment(fileName, fileAttachment);
+            Map<String, Object> datas = new HashMap();
+            datas.put("mail_text", mail_text);
+            Template template = configuration.getTemplate("heNanRelationDistribution.ftl");
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
+            helper.setText(html, true);
+            jms.send(message);
+            logger.info("- 邮件发送成功");
+        } catch (Exception e) {
+            logger.info("发送邮件异常：" + e.getMessage());
+        }
     }
 }
