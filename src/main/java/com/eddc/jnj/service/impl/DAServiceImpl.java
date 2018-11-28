@@ -431,8 +431,8 @@ public class DAServiceImpl implements DAService {
                         String goalValue_thisWeekNewAdd = row.getCell(goalPosition_thisWeekNewAdd).toString();
                         String goalValue_isAbnormal = row.getCell(goalPosition_isAbnormal).toString();
                         String goalValue__remark = row.getCell(goalPosition_remark).toString();
-
-                        if (goalValue_thisWeekNewAdd.equals("是") && goalValue_isAbnormal.equals("是")) {
+                        //标黄 逻辑 2018年11月28日11:33:18 ，备注提示 ='低于预警价' and 本周新增='是'
+                        if (goalValue_thisWeekNewAdd.equals("是") && goalValue__remark.equals("低于预警价")) {
                             for (Cell cell : row) {
                                 cell.setCellStyle(goalCellStyle);
 //                                        System.out.print(cell.toString() + " ");
@@ -620,7 +620,7 @@ public class DAServiceImpl implements DAService {
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 //            helper.setFrom("jjmcgaop@earlydata.com");
-            helper.setFrom("jjmcgaop@earlydata.com", "JJMC GA OP");
+            helper.setFrom("jjmcgaop@earlydata.com", "EDDC");
             String to = "keshi.wang@earlydata.com";
             //测试
 //            helper.setTo(to);
@@ -817,7 +817,7 @@ public class DAServiceImpl implements DAService {
         MimeMessage message = jms.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom("jjmcgaop@earlydata.com", "JJMC GA OP");
+            helper.setFrom("jjmcgaop@earlydata.com", "EDDC");
             String to = "keshi.wang@earlydata.com";
             //测试
             //helper.setTo(to);

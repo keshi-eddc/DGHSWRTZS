@@ -36,7 +36,7 @@ spring:
       default-encoding: utf-8
       host: smtp.exmail.qq.com
       username: jjmcgaop@earlydata.com
-      password: Tx2015
+      password: Edmi168
       port: 25
       protocol: smtp
     freemarker:

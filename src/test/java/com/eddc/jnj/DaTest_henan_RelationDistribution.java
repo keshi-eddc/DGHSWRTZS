@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +23,10 @@ public class DaTest_henan_RelationDistribution {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final String DATE = "2018-11-21";
+    static SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+    static String dateStr = sf.format(new Date());
+    private static final String DATE = dateStr;
+//    private static final String DATE = "2018-11-21";
 
     /*1测试 获取邮件附件*/
     @Test

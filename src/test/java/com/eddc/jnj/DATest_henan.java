@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,9 +35,12 @@ public class DATest_henan {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    //      private static final String DATE = "2018-10-24";
-//    private static final String DATE = "2018-11-07";
-    private static final String DATE = "2018-11-21";
+    static SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+    static String dateStr = sf.format(new Date());
+    private static final String DATE = dateStr;
+    // private static final String DATE = "2018-10-24";
+    // private static final String DATE = "2018-11-07";
+//     private static final String DATE = "2018-11-21";
 
 
     //1.执行存储过程
