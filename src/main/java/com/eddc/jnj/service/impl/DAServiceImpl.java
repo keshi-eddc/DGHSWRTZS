@@ -5,6 +5,7 @@ import com.avalon.holygrail.excel.norm.ExcelWorkBookExport;
 import com.avalon.holygrail.util.Export;
 import com.eddc.jnj.config.Export_path_config;
 import com.eddc.jnj.dao.DADao;
+import com.eddc.jnj.dao.ShanXiDao;
 import com.eddc.jnj.service.DAService;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -26,6 +27,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
+import javax.annotation.Resource;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +46,9 @@ public class DAServiceImpl implements DAService {
 
     @Autowired
     private DADao daDao;//这里会报错，但是并不会影响
+
+    @Resource
+    private ShanXiDao shanXiDao;
 
     @Autowired
     private Configuration configuration;
@@ -835,6 +840,177 @@ public class DAServiceImpl implements DAService {
             Map<String, Object> datas = new HashMap();
             datas.put("mail_text", mail_text);
             Template template = configuration.getTemplate("heNanRelationDistribution.ftl");
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
+            helper.setText(html, true);
+            jms.send(message);
+            logger.info("- 邮件发送成功");
+        } catch (Exception e) {
+            logger.info("发送邮件异常：" + e.getMessage());
+        }
+    }
+
+    //==========================================陕西省邮件推送=====================================================
+
+    @Override
+    public void getShanXiAttachment(Map params) {
+        logger.info("- 开始获取陕西省 邮件附件");
+        //1.获得数据
+        //1.1 sheet1数据  命名：强生上海
+        List<Map<String, Object>> mapListSheet1 = shanXiDao.getShanXiDiscussPriceData(params);
+        if (mapListSheet1.size() > 0) {
+            logger.info("- Sheet1获得：" + mapListSheet1.size() + " 条数据");
+        } else {
+            logger.error("！！！Sheet1未获得数据");
+        }
+        //1.2 sheet3数据  命名:强生上海挂网数据
+        List<Map<String, Object>> mapListSheet3 = shanXiDao.getShanXiCatalogueData(params);
+        if (mapListSheet3.size() > 0) {
+            logger.info("- Sheet3获得：" + mapListSheet3.size() + " 条数据");
+        } else {
+            logger.error("！！！Sheet3未获得数据");
+        }
+
+        //2.构建存储数据的Workbook
+        SXSSFWorkbook wb = new SXSSFWorkbook(mapListSheet1.size() + 1 + mapListSheet3.size() + 1);
+        ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
+        //表头 和 内容
+        //sheet1
+        SXSSFExcelTitle[][] sheet1_titles = this.getTitles(mapListSheet1);
+        List<String> sheet1_columnFields = this.getColumnFields(mapListSheet1);
+        //sheet3
+        SXSSFExcelTitle[][] sheet3_titles = this.getTitles(mapListSheet3);
+        List<String> sheet3_columnFields = this.getColumnFields(mapListSheet3);
+
+        //3.导出数据
+        //文件输出路径
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String dateday = StringUtils.substringAfterLast(datestr, "-");
+        String fileDate = dateyear + "." + datemon + "." + dateday;
+        String fileName = "陕西省平台挂网和议价数据 " + fileDate + ".xlsx";
+        String outPath = resource.getShanxi_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        try {
+            //数据导入表格
+            ewb.createSheet("强生上海").setTitles(sheet1_titles).setColumnFields(sheet1_columnFields).importData(mapListSheet1);
+            ewb.createSheet("迈思强");
+            ewb.createSheet("强生上海挂网数据").setTitles(sheet3_titles).setColumnFields(sheet3_columnFields).importData(mapListSheet3);
+            ewb.createSheet("迈思强挂网数据");
+
+        } catch (Exception e) {
+            logger.error("文件生成异常：" + e.getMessage());
+        }
+        //4.处理数据
+        try {
+            //目标字体设置颜色
+            XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
+            Font goalFont_red = wb.createFont();
+
+            //设置表头加粗
+            CellStyle headCellStyle = wb.createCellStyle();
+            Font headFont = wb.createFont();
+            //粗体显示
+            headFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            headCellStyle.setFont(headFont);
+            for (int i = 0; i < wb.getNumberOfSheets(); i++) {
+                Sheet sheet = wb.getSheetAt(i);
+                Row headRow = sheet.getRow(0);
+                if (headRow == null) {
+                    continue;
+                }
+                for (Cell cell : headRow) {
+                    cell.setCellStyle(headCellStyle);
+                    String cellValue = cell.toString();
+                    if (cellValue.equalsIgnoreCase("议价价格-挂网价格")) {
+                        //显示红色
+                        //字体颜色
+                        goalFont_red.setColor(HSSFColor.RED.index);
+                        goalCellStyle_red.setFont(goalFont_red);
+                        cell.setCellStyle(goalCellStyle_red);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("表格设置格式错误，请检查。");
+            e.printStackTrace();
+        }
+        try {
+            //表格输出到文件
+            ewb.export(outPath);
+            logger.info("- 陕西省 附件导出完成，路径：" + outPath);
+        } catch (IOException e) {
+            logger.error("！！！表格输出到文件 错误");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void sendShanXiEmail(Map params) {
+        logger.info("- 开始发送陕西省 邮件");
+        /*获取所有的邮件接收者*/
+        params.put("sendType", "customer");
+        List<Map<String, Object>> users = shanXiDao.selectUsersByProviceBySendType(params);
+        String[] tos = new String[users.size()];
+        for (int i = 0; i < users.size(); i++) {
+            tos[i] = users.get(i).get("mail_address").toString();
+            logger.info("- 发送给：" + tos[i].toString());
+        }
+        /*获取所有的邮件抄送者*/
+        params.put("sendType", "copyto");
+        List<Map<String, Object>> ccusers = daDao.selectUsersByProviceByBu(params);
+        String[] cctos = new String[ccusers.size()];
+        for (int i = 0; i < ccusers.size(); i++) {
+            cctos[i] = ccusers.get(i).get("mail_address").toString();
+            logger.info("- 抄送给：" + cctos[i].toString());
+        }
+        /*附件文件*/
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String dateday = StringUtils.substringAfterLast(datestr, "-");
+        String fileDate = dateyear + "." + datemon + "." + dateday;
+        /*附件名称*/
+        String fileName = "陕西省平台挂网和议价数据 " + fileDate + ".xlsx";
+        /*构建文件路径*/
+        String outPath = resource.getShanxi_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        File file = new File(outPath);
+        //检查路径
+        if (!file.isDirectory()) {
+            if (file.exists()) {
+                logger.info("- 附件文件:" + outPath);
+            } else {
+                logger.error("！！！附件文件,路径错误");
+                return;
+            }
+        } else {
+            logger.error("！！！附件文件,路径错误");
+            return;
+        }
+        /*邮件主题*/
+        String subject = "陕西省平台挂网和议价数据，" + fileDate;
+        logger.info("- 邮件主题：" + subject);
+        /*邮件正文*/
+        String mail_text = dateyear + "年" + datemon + "月" + dateday + "日";
+        /*邮件发送*/
+        System.setProperty("mail.mime.splitlongparameters", "false");
+        MimeMessage message = jms.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("jjmcgaop@earlydata.com", "EDDC");
+            String to = "keshi.wang@earlydata.com";
+            //发送
+            helper.setTo(tos);
+            //抄送
+            if (cctos.length > 0) {
+                helper.setCc(cctos);
+            }
+            helper.setSubject(subject);
+            FileSystemResource fileAttachment = new FileSystemResource(new File(outPath));
+            //添加附件
+            helper.addAttachment(fileName, fileAttachment);
+            Map<String, Object> datas = new HashMap();
+            datas.put("mail_text", mail_text);
+            Template template = configuration.getTemplate("shanxiEmail.ftl");
             String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
             helper.setText(html, true);
             jms.send(message);

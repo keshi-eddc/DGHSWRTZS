@@ -35,4 +35,12 @@ public interface DAService {
 
     //2.发送邮件
     void sentHeNanRelationDistributionEmail(Map params);
+
+    /*****陕西省 邮件推送*****/
+    //1.获得邮件的附件
+    void getShanXiAttachment(Map params);
+
+    //2.发送邮件
+    void sendShanXiEmail(Map params);
+
 }

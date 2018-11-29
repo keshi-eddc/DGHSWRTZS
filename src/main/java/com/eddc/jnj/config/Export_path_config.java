@@ -17,6 +17,15 @@ public class Export_path_config {
     private String siChuan_zipBasicPath;
     private String heNan_basicPath;
     private String heNan_zipBasicPath;
+    private String shanxi_basicPath;
+
+    public String getShanxi_basicPath() {
+        return shanxi_basicPath;
+    }
+
+    public void setShanxi_basicPath(String shanxi_basicPath) {
+        this.shanxi_basicPath = shanxi_basicPath;
+    }
 
     public String getGuangdong_basicPath() {
         return guangdong_basicPath;

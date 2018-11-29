@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.eddc.jnj.dao.ShanXiDao">
+
+
+    <!--获得邮件接收者-->
+    <select id="selectUsersByProviceBySendType" resultType="java.util.LinkedHashMap" parameterType="hashmap">
+     select c.* from Johnson_message_category ct LEFT JOIN Johnson_message mg on ct.id = mg.province_id
+                left join Johnson_message_customer c on mg.customer_id = c.id
+     where  ct.province_name = #{province_name} and c.mail_switch = 'on'and mg.mail_switch = 'on' and c.type = #{sendType}
+  </select>
+    <!--获取议价信息-->
+    <select id="getShanXiDiscussPriceData" resultType="java.util.LinkedHashMap" parameterType="hashmap">
+     select b.bu as BU,a.*,c.限价 as 挂网价格,case when a.价格 is not null and c.限价 is not null then (a.价格-c.限价) else '' end as '议价价格-挂网价格'
+from(
+      SELECT
+	   [insert_time] as 数据导出时间--
+	  , cast([procure_catalog_id] as int)  as 组件编号--
+      ,[gpart_name] as 组件名称--
+      --,[gpartreg_outlookc] as 注册证规格
+      --,[gpartreg_model] as 注册证型号
+      --,[gpart_origin] as 产地
+      --,[code_count] as code数量
+      --,[com_name_sc] as 生产企业
+      --,'未确认' as 确认状态
+      ,[click_hos_name] as 医院--
+      ,[click_gpart_price] as 价格--
+      ,case when [click_confirm_state]=1 then '已提交'
+	        when [click_confirm_state]=2 then '已确认'
+			when [click_confirm_state]=3 then '拒绝' else '' end as 提交状态
+      ,[click_edup_time] as 提交时间--
+      ,[click_gpartreg_outlookc] as 产品规格--
+      ,[click_gpartreg_model] as 产品型号--
+	  ,[gpartminp_unit] as 单位
+	  ,[regcard_nm] as 注册证编号
+   --   ,[sync_number] as 数据批次
+   --   ,[account] as 账号
+      --,[update_time]
+  FROM [dbo].[Johnson_shanxi_discussPrice]
+  where convert(date,[insert_Time],23)=(select max(convert(date,[insert_Time],23)) from [Johnson_shanxi_catalogue])
+    and [confirm_state]=1
+)a
+left join
+(
+ SELECT [组件编号]
+      ,[BU]
+  FROM [dbo].[Johnson_shanxi_shguawang_bu_20181128]
+)b
+on a.组件编号=b.[组件编号]
+left join
+(
+   SELECT
+         --[account] as 账号
+	  --,[search_keyword] as 申报企业搜索词
+      --,
+	   cast([procure_catalog_id] as int) as 组件编号--
+      --,[gtype_name] as 大类名称
+      ,[sort_name] as 目录分类--
+      --,[catalogue_type] as 目录类别
+      ,[gpart_name] as 组件名称--
+      ,[gpartreg_outlookc] as 注册证规格--
+      ,[gpartreg_model] as 注册证型号--
+      ,[gpart_origin] as 产地--
+      ,[gpartminp_unit] as 单位--
+      ,[code_count] as CODE数量--
+      ,[com_name] as 申报企业名称--
+      ,[com_name_sc] as 生产企业名称--
+      ,[regcard_nm] as 注册证编号--
+      --,[regcard_ded] as 注册证有效期
+      --,[procure_cata_state] as 状态
+      ,[gparts_price] as 限价--
+      --,[sync_number] as 批次
+      ,[insert_time] as 更新时间--
+  FROM [dbo].[Johnson_shanxi_catalogue]
+  where convert(date,[insert_Time],23)=(select max(convert(date,[insert_Time],23)) from [Johnson_shanxi_catalogue])
+)c on a.组件编号=c.组件编号
+  </select>
+
+    <!--获得挂网数据-->
+    <select id="getShanXiCatalogueData" resultType="java.util.LinkedHashMap" parameterType="hashmap">
+     select b.[BU] ,a.*
+from(
+   SELECT
+         --[account] as 账号
+	  --,[search_keyword] as 申报企业搜索词
+      --,
+	   cast([procure_catalog_id] as int) as 组件编号--
+      --,[gtype_name] as 大类名称
+      ,[sort_name] as 目录分类--
+      --,[catalogue_type] as 目录类别
+      ,[gpart_name] as 组件名称--
+      ,[gpartreg_outlookc] as 注册证规格--
+      ,[gpartreg_model] as 注册证型号--
+      ,[gpart_origin] as 产地--
+      ,[gpartminp_unit] as 单位--
+      ,[code_count] as CODE数量--
+      ,[com_name] as 申报企业名称--
+      ,[com_name_sc] as 生产企业名称--
+      ,[regcard_nm] as 注册证编号--
+      --,[regcard_ded] as 注册证有效期
+      --,[procure_cata_state] as 状态
+      ,[gparts_price] as 限价--
+      --,[sync_number] as 批次
+      ,[insert_time] as 更新时间--
+  FROM [dbo].[Johnson_shanxi_catalogue]
+  where convert(date,[insert_Time],23)=(select max(convert(date,[insert_Time],23)) from [Johnson_shanxi_catalogue])
+)a
+left join
+(SELECT [组件编号]
+      ,[BU]
+      ,[目录分类]
+      ,[组件名称]
+      ,[注册证规格]
+      ,[注册证型号]
+      ,[产地]
+      ,[单位]
+      ,[CODE数量]
+      ,[申报企业名称]
+      ,[生产企业名称]
+      ,[注册证编号]
+      ,[限价]
+  FROM [dbo].[Johnson_shanxi_shguawang_bu_20181128]
+)b
+on a.组件编号=b.[组件编号]
+  </select>
+
+</mapper>
