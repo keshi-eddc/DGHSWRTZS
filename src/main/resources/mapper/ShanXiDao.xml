@@ -39,6 +39,7 @@ from(
   FROM [dbo].[Johnson_shanxi_discussPrice]
   where convert(date,[insert_Time],23)=(select max(convert(date,[insert_Time],23)) from [Johnson_shanxi_catalogue])
     and [confirm_state]=1
+	and [click_confirm_state]=1
 )a
 left join
 (
@@ -74,6 +75,7 @@ left join
   FROM [dbo].[Johnson_shanxi_catalogue]
   where convert(date,[insert_Time],23)=(select max(convert(date,[insert_Time],23)) from [Johnson_shanxi_catalogue])
 )c on a.组件编号=c.组件编号
+
   </select>
 
     <!--获得挂网数据-->

@@ -858,16 +858,16 @@ public class DAServiceImpl implements DAService {
         //1.1 sheet1数据  命名：强生上海
         List<Map<String, Object>> mapListSheet1 = shanXiDao.getShanXiDiscussPriceData(params);
         if (mapListSheet1.size() > 0) {
-            logger.info("- Sheet1获得：" + mapListSheet1.size() + " 条数据");
+            logger.info("   Sheet1（强生上海）获得：" + mapListSheet1.size() + " 条数据");
         } else {
-            logger.error("！！！Sheet1未获得数据");
+            logger.info("   Sheet1（强生上海）未获得数据");
         }
         //1.2 sheet3数据  命名:强生上海挂网数据
         List<Map<String, Object>> mapListSheet3 = shanXiDao.getShanXiCatalogueData(params);
         if (mapListSheet3.size() > 0) {
-            logger.info("- Sheet3获得：" + mapListSheet3.size() + " 条数据");
+            logger.info("   Sheet3（强生上海挂网数据）获得：" + mapListSheet3.size() + " 条数据");
         } else {
-            logger.error("！！！Sheet3未获得数据");
+            logger.info("   Sheet3（强生上海挂网数据）未获得数据");
         }
 
         //2.构建存储数据的Workbook
@@ -875,14 +875,24 @@ public class DAServiceImpl implements DAService {
         ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
         //表头 和 内容
         //sheet1
-        SXSSFExcelTitle[][] sheet1_titles = this.getTitles(mapListSheet1);
-        List<String> sheet1_columnFields = this.getColumnFields(mapListSheet1);
+        SXSSFExcelTitle[][] sheet1_titles = null;
+        List<String> sheet1_columnFields = null;
+        if (mapListSheet1.size() > 0) {
+            sheet1_titles = this.getTitles(mapListSheet1);
+            sheet1_columnFields = this.getColumnFields(mapListSheet1);
+        }
+
         //sheet3
-        SXSSFExcelTitle[][] sheet3_titles = this.getTitles(mapListSheet3);
-        List<String> sheet3_columnFields = this.getColumnFields(mapListSheet3);
+        SXSSFExcelTitle[][] sheet3_titles = null;
+        List<String> sheet3_columnFields = null;
+        if (mapListSheet3.size() > 0) {
+            sheet3_titles = this.getTitles(mapListSheet3);
+            sheet3_columnFields = this.getColumnFields(mapListSheet3);
+        }
+
 
         //3.导出数据
-        //文件输出路径
+        //3.1文件输出路径
         String datestr = params.get("date").toString();
         String dateyear = StringUtils.substringBefore(datestr, "-");
         String datemon = StringUtils.substringBetween(datestr, "-", "-");
@@ -890,11 +900,21 @@ public class DAServiceImpl implements DAService {
         String fileDate = dateyear + "." + datemon + "." + dateday;
         String fileName = "陕西省平台挂网和议价数据 " + fileDate + ".xlsx";
         String outPath = resource.getShanxi_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        //3.2数据导入表格
         try {
-            //数据导入表格
-            ewb.createSheet("强生上海").setTitles(sheet1_titles).setColumnFields(sheet1_columnFields).importData(mapListSheet1);
+            //sheet1
+            ewb.createSheet("强生上海");
+            if (sheet1_titles != null && sheet1_columnFields != null) {
+                ewb.getSheet(0).setTitles(sheet1_titles).setColumnFields(sheet1_columnFields).importData(mapListSheet1);
+            }
+            //sheet2
             ewb.createSheet("迈思强");
-            ewb.createSheet("强生上海挂网数据").setTitles(sheet3_titles).setColumnFields(sheet3_columnFields).importData(mapListSheet3);
+            //sheet3
+            ewb.createSheet("强生上海挂网数据");
+            if (sheet3_titles != null && sheet3_columnFields != null) {
+                ewb.getSheet(2).setTitles(sheet3_titles).setColumnFields(sheet3_columnFields).importData(mapListSheet3);
+            }
+            //sheet4
             ewb.createSheet("迈思强挂网数据");
 
         } catch (Exception e) {
@@ -905,6 +925,9 @@ public class DAServiceImpl implements DAService {
             //目标字体设置颜色
             XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
             Font goalFont_red = wb.createFont();
+            //字体颜色
+            goalFont_red.setColor(HSSFColor.RED.index);
+            goalCellStyle_red.setFont(goalFont_red);
 
             //设置表头加粗
             CellStyle headCellStyle = wb.createCellStyle();
@@ -918,15 +941,23 @@ public class DAServiceImpl implements DAService {
                 if (headRow == null) {
                     continue;
                 }
+                //一个sheet的目标列，设置红色
+                int goalPosition_discussCatalogue = 0;
+                //寻找目标列的位置
                 for (Cell cell : headRow) {
                     cell.setCellStyle(headCellStyle);
                     String cellValue = cell.toString();
                     if (cellValue.equalsIgnoreCase("议价价格-挂网价格")) {
-                        //显示红色
-                        //字体颜色
-                        goalFont_red.setColor(HSSFColor.RED.index);
-                        goalCellStyle_red.setFont(goalFont_red);
-                        cell.setCellStyle(goalCellStyle_red);
+                        goalPosition_discussCatalogue = cell.getColumnIndex();
+                    }
+                }
+                //目标列，设置字体颜色
+                for (int rowNum = 0; rowNum < sheet.getLastRowNum() + 1; rowNum++) {
+                    Row lineRow = sheet.getRow(rowNum);
+                    //目标cell
+                    if (goalPosition_discussCatalogue != 0) {
+                        Cell goalCell_discussCatalogue = lineRow.getCell(goalPosition_discussCatalogue);
+                        goalCell_discussCatalogue.setCellStyle(goalCellStyle_red);
                     }
                 }
             }
