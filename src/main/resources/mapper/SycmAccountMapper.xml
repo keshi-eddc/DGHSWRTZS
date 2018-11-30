@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.eddc.jnj.dao.SycmAccountDao">
+    <resultMap id="BaseResultMap" type="com.eddc.jnj.model.SycmAccount">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="token" property="token" jdbcType="VARCHAR"/>
+        <result column="seller_cookie" property="sellerCookie" jdbcType="VARCHAR"/>
+        <result column="sycm_cookie" property="sycmCookie" jdbcType="VARCHAR"/>
+        <result column="sycm_group" property="sycmGroup" jdbcType="VARCHAR"/>
+        <result column="userId" property="userid" jdbcType="VARCHAR"/>
+        <result column="shop_name" property="shopName" jdbcType="VARCHAR"/>
+        <result column="login_status" property="loginStatus" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="cookie_status" property="cookieStatus" jdbcType="VARCHAR"/>
+        <result column="chitu_cookie" property="chituCookie" jdbcType="VARCHAR"/>
+        <result column="shop_url" property="shopUrl" jdbcType="VARCHAR"/>
+        <result column="server" property="server" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, name, password, token, seller_cookie, sycm_cookie, sycm_group, userId, shop_name, 
+    login_status, status, cookie_status, chitu_cookie, shop_url, server
+  </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        select
+        <include refid="Base_Column_List"/>
+        from sycm_account
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from sycm_account
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+    <insert id="insert" parameterType="com.eddc.jnj.model.SycmAccount">
+    insert into sycm_account (id, name, password, 
+      token, seller_cookie, sycm_cookie, 
+      sycm_group, userId, shop_name, 
+      login_status, status, cookie_status, 
+      chitu_cookie, shop_url, server
+      )
+    values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{token,jdbcType=VARCHAR}, #{sellerCookie,jdbcType=VARCHAR}, #{sycmCookie,jdbcType=VARCHAR}, 
+      #{sycmGroup,jdbcType=VARCHAR}, #{userid,jdbcType=VARCHAR}, #{shopName,jdbcType=VARCHAR}, 
+      #{loginStatus,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{cookieStatus,jdbcType=VARCHAR}, 
+      #{chituCookie,jdbcType=VARCHAR}, #{shopUrl,jdbcType=VARCHAR}, #{server,jdbcType=VARCHAR}
+      )
+  </insert>
+    <insert id="insertSelective" parameterType="com.eddc.jnj.model.SycmAccount">
+        insert into sycm_account
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+            <if test="password != null">
+                password,
+            </if>
+            <if test="token != null">
+                token,
+            </if>
+            <if test="sellerCookie != null">
+                seller_cookie,
+            </if>
+            <if test="sycmCookie != null">
+                sycm_cookie,
+            </if>
+            <if test="sycmGroup != null">
+                sycm_group,
+            </if>
+            <if test="userid != null">
+                userId,
+            </if>
+            <if test="shopName != null">
+                shop_name,
+            </if>
+            <if test="loginStatus != null">
+                login_status,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="cookieStatus != null">
+                cookie_status,
+            </if>
+            <if test="chituCookie != null">
+                chitu_cookie,
+            </if>
+            <if test="shopUrl != null">
+                shop_url,
+            </if>
+            <if test="server != null">
+                server,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="token != null">
+                #{token,jdbcType=VARCHAR},
+            </if>
+            <if test="sellerCookie != null">
+                #{sellerCookie,jdbcType=VARCHAR},
+            </if>
+            <if test="sycmCookie != null">
+                #{sycmCookie,jdbcType=VARCHAR},
+            </if>
+            <if test="sycmGroup != null">
+                #{sycmGroup,jdbcType=VARCHAR},
+            </if>
+            <if test="userid != null">
+                #{userid,jdbcType=VARCHAR},
+            </if>
+            <if test="shopName != null">
+                #{shopName,jdbcType=VARCHAR},
+            </if>
+            <if test="loginStatus != null">
+                #{loginStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="cookieStatus != null">
+                #{cookieStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="chituCookie != null">
+                #{chituCookie,jdbcType=VARCHAR},
+            </if>
+            <if test="shopUrl != null">
+                #{shopUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="server != null">
+                #{server,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.eddc.jnj.model.SycmAccount">
+        update sycm_account
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="token != null">
+                token = #{token,jdbcType=VARCHAR},
+            </if>
+            <if test="sellerCookie != null">
+                seller_cookie = #{sellerCookie,jdbcType=VARCHAR},
+            </if>
+            <if test="sycmCookie != null">
+                sycm_cookie = #{sycmCookie,jdbcType=VARCHAR},
+            </if>
+            <if test="sycmGroup != null">
+                sycm_group = #{sycmGroup,jdbcType=VARCHAR},
+            </if>
+            <if test="userid != null">
+                userId = #{userid,jdbcType=VARCHAR},
+            </if>
+            <if test="shopName != null">
+                shop_name = #{shopName,jdbcType=VARCHAR},
+            </if>
+            <if test="loginStatus != null">
+                login_status = #{loginStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="cookieStatus != null">
+                cookie_status = #{cookieStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="chituCookie != null">
+                chitu_cookie = #{chituCookie,jdbcType=VARCHAR},
+            </if>
+            <if test="shopUrl != null">
+                shop_url = #{shopUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="server != null">
+                server = #{server,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.eddc.jnj.model.SycmAccount">
+    update sycm_account
+    set name = #{name,jdbcType=VARCHAR},
+      password = #{password,jdbcType=VARCHAR},
+      token = #{token,jdbcType=VARCHAR},
+      seller_cookie = #{sellerCookie,jdbcType=VARCHAR},
+      sycm_cookie = #{sycmCookie,jdbcType=VARCHAR},
+      sycm_group = #{sycmGroup,jdbcType=VARCHAR},
+      userId = #{userid,jdbcType=VARCHAR},
+      shop_name = #{shopName,jdbcType=VARCHAR},
+      login_status = #{loginStatus,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      cookie_status = #{cookieStatus,jdbcType=VARCHAR},
+      chitu_cookie = #{chituCookie,jdbcType=VARCHAR},
+      shop_url = #{shopUrl,jdbcType=VARCHAR},
+      server = #{server,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+   select * from sycm_account
+  </select>
+
+    <select id="getMaxId" resultType="java.lang.Integer">
+  select max(id) from sycm_account
+  </select>
+
+    <select id="selectAccountByNameByGroupByShop" resultMap="BaseResultMap" parameterType="java.lang.String">
+  select * from sycm_account where name = #{name} and sycm_group =  #{sycm_group} and shop_name =  #{shop_name}
+  </select>
+
+</mapper>
