@@ -344,12 +344,13 @@ public class DAServiceImpl implements DAService {
 //        logger.info("- 查询所有用户sql :" + sql_user);
 //        List<Map<String, Object>> userListMap = daDao.getaHeNanUsers(sql_user);
         /*构建导出文件路径*/
+        String bu = params.get("BU").toString();
         String datestr = params.get("date").toString();
         String dateyear = StringUtils.substringBefore(datestr, "-");
         String datemon = StringUtils.substringBetween(datestr, "-", "-");
         String dateDay = StringUtils.substringAfterLast(datestr, "-");
         String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\"
-                + "河南省中标产品配送情况汇总 " + allStartDate + "_" + dateyear + "." + datemon + "." + dateDay + ".xlsx";
+                + "河南省中标产品配送情况汇总-" + bu + " " + allStartDate + "_" + dateyear + "." + datemon + "." + dateDay + ".xlsx";
         logger.info("- 文件输出路径:" + outPath);
         //初始化 SXSSFWorkbook 的大小
         String sql_allCount = "select COUNT(1) as allNum from Johnson_henan_OrderDistributeGoodsDetails_OrderDetailed_forcust";
@@ -645,22 +646,24 @@ public class DAServiceImpl implements DAService {
                     String matchedNormalFileName = "河南省中标产品配送情况汇总";
                     //异常数据的文件
                     String matchedAbnormalFileName = "河南省平台异常订单数据";
+                    //BU
+                    String matchedBuFileName = params.get("BU").toString() ;
                     if (!fileName.contains("副本")) {
-                        if (fileName.contains(matchedNormalFileName)) {
-                            if (fileName.contains("_" + fileDate)) {
-                                FileSystemResource file = new FileSystemResource(filefile);
-                                helper.addAttachment(file.getFilename(), file);//添加附件
-                                logger.info("- 添加附件：" + fileName);
-                            }
-                        } else if (fileName.contains(matchedAbnormalFileName)) {
-                            if (fileName.contains(fileDate)) {
-                                FileSystemResource file = new FileSystemResource(filefile);
-                                helper.addAttachment(file.getFilename(), file);//添加附件
-                                logger.info("- 添加附件：" + fileName);
+                        if(fileName.contains(matchedBuFileName)){
+                            if (fileName.contains(matchedNormalFileName)) {
+                                if (fileName.contains("_" + fileDate)) {
+                                    FileSystemResource file = new FileSystemResource(filefile);
+                                    helper.addAttachment(file.getFilename(), file);//添加附件
+                                    logger.info("- 添加附件：" + fileName);
+                                }
+                            } else if (fileName.contains(matchedAbnormalFileName)) {
+                                if (fileName.contains(fileDate)) {
+                                    FileSystemResource file = new FileSystemResource(filefile);
+                                    helper.addAttachment(file.getFilename(), file);//添加附件
+                                    logger.info("- 添加附件：" + fileName);
+                                }
                             }
                         }
-                    } else {
-//                    logger.error("没有发现 文件 ：**至" + params.get("date"));
                     }
                 }
             } catch (Exception e) {

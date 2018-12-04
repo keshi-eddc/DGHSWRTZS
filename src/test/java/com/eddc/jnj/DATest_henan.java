@@ -41,7 +41,11 @@ public class DATest_henan {
     // private static final String DATE = "2018-10-24";
     // private static final String DATE = "2018-11-07";
 //     private static final String DATE = "2018-11-21";
-
+    /**
+     * BU
+     **/
+//    private static final String BU = "BW";
+    private static final String BU = "CNV";
 
     //1.执行存储过程
     //2.mybits 执行sql 拿到返回结果
@@ -51,7 +55,7 @@ public class DATest_henan {
     @Test
     public void updateHeNan() {
         Map<String, Object> params = new HashMap<String, Object>(3);
-        params.put("BU", "BW");
+        params.put("BU", BU);
         params.put("date", DATE);
         params.put("num", "-7");
         params.put("num2", "1");
@@ -67,7 +71,7 @@ public class DATest_henan {
         params.put("num", "-7");
         //sql参数
         params.put("date", DATE);
-        params.put("BU", "BW");
+        params.put("BU", BU);
         daService.getDataHeNan(params);
     }
 
@@ -76,7 +80,7 @@ public class DATest_henan {
     public void getHeNanAbnormalData() {
         Map<String, Object> params = new HashMap<String, Object>(6);
         params.put("date", DATE);
-        params.put("BU", "BW");
+        params.put("BU", BU);
         daService.getDataHeNanabnormal(params);
     }
 
@@ -85,7 +89,7 @@ public class DATest_henan {
     public void sendHeNanOrderData() {
         Map<String, Object> params = new HashMap<String, Object>(6);
         params.put("province_name", "河南省");
-        params.put("BU", "BW");
+        params.put("BU", BU);
         params.put("date", DATE);
         params.put("num", "-7");
 //        params.put("num2", "2");
