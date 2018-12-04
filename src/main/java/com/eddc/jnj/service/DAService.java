@@ -36,6 +36,13 @@ public interface DAService {
     //2.发送邮件
     void sentHeNanRelationDistributionEmail(Map params);
 
+    /*****河南省平台订单未匹配数据邮件推送*****/
+    //1.获得邮件附件
+    void getHenanUnmatchDataAttachment(Map params);
+
+    //2.发送邮件
+    void sendHenanUnmatchDataEmail(Map params);
+
     /*****陕西省 邮件推送*****/
     //1.获得邮件的附件
     void getShanXiAttachment(Map params);

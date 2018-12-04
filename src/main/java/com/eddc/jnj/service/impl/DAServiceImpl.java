@@ -412,6 +412,7 @@ public class DAServiceImpl implements DAService {
                     int goalPosition_thisWeekNewAdd = 0;
                     int goalPosition_isAbnormal = 0;
                     int goalPosition_remark = 0;
+                    int goalPosition_GAP = 0;
                     for (Cell cell : headRow) {
                         cell.setCellStyle(headCellStyle);
                         String cellValue = cell.toString();
@@ -421,8 +422,11 @@ public class DAServiceImpl implements DAService {
                             goalPosition_isAbnormal = cell.getColumnIndex();
                         } else if (cellValue.equals("备注提示")) {
                             goalPosition_remark = cell.getColumnIndex();
+                        } else if (cellValue.equals("GAP")) {
+                            goalPosition_GAP = cell.getColumnIndex();
                         }
                     }
+                    /***********设置目标列背景色***********/
                     //设置目标列背景色
                     XSSFCellStyle goalCellStyle = (XSSFCellStyle) wb.createCellStyle();
                     goalCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
@@ -431,26 +435,40 @@ public class DAServiceImpl implements DAService {
                     Font goalFont = wb.createFont();
                     goalFont.setFontName("Calibri");
                     goalCellStyle.setFont(goalFont);
+                    /*********标红*********/
+                    //标红
+                    XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
+                    Font goalFont_red = wb.createFont();
+                    //字体颜色
+                    goalFont_red.setColor(HSSFColor.RED.index);
+                    goalCellStyle_red.setFont(goalFont_red);
+                    /**************标红且背景色*************/
+                    XSSFCellStyle goalCellStyle_red_foregroundColor = (XSSFCellStyle) wb.createCellStyle();
+                    goalCellStyle_red_foregroundColor.setFillForegroundColor(HSSFColor.YELLOW.index);
+                    goalCellStyle_red_foregroundColor.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+                    goalCellStyle_red_foregroundColor.setFont(goalFont);
+                    goalCellStyle_red_foregroundColor.setFont(goalFont_red);
+
                     for (int rowNum = 1; rowNum < sheet.getLastRowNum() + 1; rowNum++) {
 //                                System.out.println(rowNum + " ");
                         Row row = sheet.getRow(rowNum);
                         String goalValue_thisWeekNewAdd = row.getCell(goalPosition_thisWeekNewAdd).toString();
                         String goalValue_isAbnormal = row.getCell(goalPosition_isAbnormal).toString();
                         String goalValue__remark = row.getCell(goalPosition_remark).toString();
-                        //标黄 逻辑 2018年11月28日11:33:18 ，备注提示 ='低于预警价' and 本周新增='是'
-                        if (goalValue_thisWeekNewAdd.equals("是") && goalValue__remark.equals("低于预警价")) {
+                        //标黄 逻辑 2018年12月4日17:51:30 ，备注提示 ='低于警示价' and 本周新增='是'
+                        if (goalValue_thisWeekNewAdd.equals("是") && goalValue__remark.equals("低于警示价")) {
                             for (Cell cell : row) {
                                 cell.setCellStyle(goalCellStyle);
 //                                        System.out.print(cell.toString() + " ");
                             }
                         }
+
                         if (goalValue__remark.equals("已红冲退货")) {
-                            XSSFCellStyle goalCellStyle_red = (XSSFCellStyle) wb.createCellStyle();
-                            Font goalFont_red = wb.createFont();
-                            //字体颜色
-                            goalFont_red.setColor(HSSFColor.RED.index);
-                            goalCellStyle_red.setFont(goalFont_red);
                             row.getCell(goalPosition_remark).setCellStyle(goalCellStyle_red);
+                        }
+                        if (goalValue__remark.equals("低于警示价")) {
+                            //字红色   背景黄色
+                            row.getCell(goalPosition_GAP).setCellStyle(goalCellStyle_red_foregroundColor);
                         }
                     }
                 } catch (Exception e) {
@@ -647,9 +665,9 @@ public class DAServiceImpl implements DAService {
                     //异常数据的文件
                     String matchedAbnormalFileName = "河南省平台异常订单数据";
                     //BU
-                    String matchedBuFileName = params.get("BU").toString() ;
+                    String matchedBuFileName = params.get("BU").toString();
                     if (!fileName.contains("副本")) {
-                        if(fileName.contains(matchedBuFileName)){
+                        if (fileName.contains(matchedBuFileName)) {
                             if (fileName.contains(matchedNormalFileName)) {
                                 if (fileName.contains("_" + fileDate)) {
                                     FileSystemResource file = new FileSystemResource(filefile);
@@ -852,7 +870,143 @@ public class DAServiceImpl implements DAService {
         }
     }
 
-    //==========================================陕西省邮件推送=====================================================
+    /*****河南省平台订单未匹配数据邮件推送*****/
+    @Override
+    public void getHenanUnmatchDataAttachment(Map params) {
+        logger.info("- 开始获取 河南省平台订单未匹配数据 附件");
+        //1.etl获得数据
+
+        List<Map<String, Object>> mapList = daDao.getHeNanOrderDataMessage(params);
+        if (mapList.size() > 0) {
+            logger.info("- 获得：" + mapList.size() + " 条数据");
+        } else {
+            logger.error("！！！未获得数据");
+        }
+        //2.处理数据
+        //存储数据的Workbook
+        SXSSFWorkbook wb = new SXSSFWorkbook(mapList.size() + 1);
+        ExcelWorkBookExport ewb = Export.buildSXSSFExportExcelWorkBook(wb);
+        //表头 和 内容
+        SXSSFExcelTitle[][] detail_titles = this.getTitles(mapList);
+        List<String> detail_columnFields = this.getColumnFields(mapList);
+
+        //3.导出数据
+        //文件输出路径
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String dateday = StringUtils.substringAfterLast(datestr, "-");
+        String fileDate = dateyear + "." + datemon + "." + dateday;
+        String fileName = "河南省中标产品配送未匹配数据 " + fileDate + ".xlsx";
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        try {
+            //数据导入表格
+            ewb.createSheet("Sheet1").setTitles(detail_titles).setColumnFields(detail_columnFields).importData(mapList);
+        } catch (Exception e) {
+            logger.error("文件生成异常：" + e.getMessage());
+        }
+        //设置表的样式
+        try {
+            //设置表头加粗
+            CellStyle headCellStyle = wb.createCellStyle();
+            Font headFont = wb.createFont();
+            //粗体显示
+            headFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            headCellStyle.setFont(headFont);
+            Sheet sheet = wb.getSheetAt(0);
+            Row headRow = sheet.getRow(0);
+            for (Cell cell : headRow) {
+                cell.setCellStyle(headCellStyle);
+            }
+        } catch (Exception e) {
+            logger.error("表格设置格式错误，请检查。");
+            e.printStackTrace();
+        }
+        try {
+            //表格输出到文件
+            ewb.export(outPath);
+            logger.info("- 附件导出完成，路径：" + outPath);
+        } catch (IOException e) {
+            logger.error("！！！表格输出到文件 错误");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void sendHenanUnmatchDataEmail(Map params) {
+        logger.info("- 开始发送 河南省平台订单未匹配数据 推送");
+        /*获取所有的邮件接收者*/
+        params.put("sendType", "customer");
+        List<Map<String, Object>> users = daDao.selectUsersByProviceByBu(params);
+        String[] tos = new String[users.size()];
+        for (int i = 0; i < users.size(); i++) {
+            tos[i] = users.get(i).get("mail_address").toString();
+            logger.info("- 发送给：" + tos[i].toString());
+        }
+        /*获取所有的邮件抄送者*/
+        params.put("sendType", "copyto");
+        List<Map<String, Object>> ccusers = daDao.selectUsersByProviceByBu(params);
+        String[] cctos = new String[ccusers.size()];
+        for (int i = 0; i < ccusers.size(); i++) {
+            cctos[i] = ccusers.get(i).get("mail_address").toString();
+            logger.info("- 抄送给：" + cctos[i].toString());
+        }
+        /*附件文件*/
+        String datestr = params.get("date").toString();
+        String dateyear = StringUtils.substringBefore(datestr, "-");
+        String datemon = StringUtils.substringBetween(datestr, "-", "-");
+        String dateday = StringUtils.substringAfterLast(datestr, "-");
+        String fileDate = dateyear + "." + datemon + "." + dateday;
+        /*附件名称*/
+        String fileName = "河南省中标产品配送未匹配数据 " + fileDate + ".xlsx";
+        /*构建文件路径*/
+        String outPath = resource.getHeNan_basicPath() + "\\" + dateyear + "\\" + datemon + "\\" + fileName;
+        File file = new File(outPath);
+        //检查路径
+        if (!file.isDirectory()) {
+            if (file.exists()) {
+                logger.info("- 附件文件:" + outPath);
+            } else {
+                logger.error("！！！附件文件,路径错误");
+                return;
+            }
+        } else {
+            logger.error("！！！附件文件,路径错误");
+            return;
+        }
+        /*邮件主题*/
+        String subject = "河南省平台订单未匹配数据，" + fileDate;
+        logger.info("- 邮件主题：" + subject);
+        /*邮件正文*/
+        String mail_text = dateyear + "年" + datemon + "月" + dateday + "日";
+        /*邮件发送*/
+        System.setProperty("mail.mime.splitlongparameters", "false");
+        MimeMessage message = jms.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("jjmcgaop@earlydata.com", "EDDC");
+            //发送
+            helper.setTo(tos);
+            //抄送
+            if (cctos.length > 0) {
+                helper.setCc(cctos);
+            }
+            helper.setSubject(subject);
+            FileSystemResource fileAttachment = new FileSystemResource(new File(outPath));
+            //添加附件
+            helper.addAttachment(fileName, fileAttachment);
+            Map<String, Object> datas = new HashMap();
+            datas.put("mail_text", mail_text);
+            Template template = configuration.getTemplate("heNanUnmatchData.ftl");
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, datas);
+            helper.setText(html, true);
+            jms.send(message);
+            logger.info("- 邮件发送成功");
+        } catch (Exception e) {
+            logger.info("发送邮件异常：" + e.getMessage());
+        }
+    }
+//==========================================陕西省邮件推送=====================================================
 
     @Override
     public void getShanXiAttachment(Map params) {
