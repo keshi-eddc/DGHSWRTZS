@@ -467,8 +467,13 @@ public class DAServiceImpl implements DAService {
                             row.getCell(goalPosition_remark).setCellStyle(goalCellStyle_red);
                         }
                         if (goalValue__remark.equals("低于警示价")) {
-                            //字红色   背景黄色
-                            row.getCell(goalPosition_GAP).setCellStyle(goalCellStyle_red_foregroundColor);
+                            if (goalValue_thisWeekNewAdd.equals("是")) {
+                                //字红色  背景黄色
+                                row.getCell(goalPosition_GAP).setCellStyle(goalCellStyle_red_foregroundColor);
+                            } else {
+                                //字红色
+                                row.getCell(goalPosition_GAP).setCellStyle(goalCellStyle_red);
+                            }
                         }
                     }
                 } catch (Exception e) {
